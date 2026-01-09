@@ -27,20 +27,17 @@ axiosClient.interceptors.request.use((config) => {
 });
 
 axiosClient.interceptors.response.use(
-    (response) => {
-        return response;
-    },
+    (response) => response,
     (error) => {
-        // Nếu lỗi là 401 (Unauthorized) -> Token hết hạn hoặc không hợp lệ
-        if (error.response && error.response.status === 401) {
-            // Xóa token trong LocalStorage p-auth');
-            
-            // Chuyển hướng về trang login
-            window.location.href = '/login';
-            
-            return Promise.reject(error);
+        if (error.response?.status === 401) {
+
+            // Nếu đang ở trang login thì KHÔNG redirect nữa
+            if (window.location.pathname !== '/login') {
+                localStorage.removeItem('phone-shop-auth');
+                window.location.href = '/login';
+            }
         }
-        
+
         return Promise.reject(error);
     }
 );
