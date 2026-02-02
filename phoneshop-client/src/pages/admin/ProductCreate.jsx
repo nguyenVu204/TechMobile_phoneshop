@@ -11,7 +11,12 @@ export default function ProductCreate() {
 
   // State 1: Thông tin chung
   const [productData, setProductData] = useState({
-    name: '', brandId: '', description: '', thumbnail: ''
+    name: '', brandId: '', description: '', thumbnail: '',screen: '',
+    chip: '',
+    battery: '',
+    rearCamera: '',
+    frontCamera: '',
+    operatingSystem: ''
   });
 
   // State 2: Biến thể
@@ -166,6 +171,40 @@ export default function ProductCreate() {
                         </div>
                     </div>
                     {/* ----------------------------------- */}
+
+                    {/* --- THÊM KHU VỰC THÔNG SỐ KỸ THUẬT --- */}
+                    <div className="pt-4 border-t">
+                        <h4 className="font-bold text-sm text-gray-700 mb-3">Thông số kỹ thuật</h4>
+                        <div className="grid grid-cols-1 gap-3">
+                            <div>
+                                <label className="text-xs font-bold text-gray-500">Màn hình</label>
+                                <input name="screen" className="w-full border p-2 rounded text-sm" placeholder="6.7 inch OLED 120Hz" onChange={handleProductChange}/>
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-gray-500">Chip xử lý</label>
+                                <input name="chip" className="w-full border p-2 rounded text-sm" placeholder="Snapdragon 8 Gen 3" onChange={handleProductChange}/>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label className="text-xs font-bold text-gray-500">Pin</label>
+                                    <input name="battery" className="w-full border p-2 rounded text-sm" placeholder="5000 mAh" onChange={handleProductChange}/>
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-gray-500">Hệ điều hành</label>
+                                    <input name="operatingSystem" className="w-full border p-2 rounded text-sm" placeholder="iOS 17 / Android 14" onChange={handleProductChange}/>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-gray-500">Camera sau</label>
+                                <input name="rearCamera" className="w-full border p-2 rounded text-sm" placeholder="200MP + 12MP + 10MP" onChange={handleProductChange}/>
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-gray-500">Camera trước</label>
+                                <input name="frontCamera" className="w-full border p-2 rounded text-sm" placeholder="12MP" onChange={handleProductChange}/>
+                            </div>
+                        </div>
+                    </div>
+                    {/* -------------------------------------- */}
 
                     <div>
                         <label className="block text-sm font-medium mb-1">Mô tả</label>

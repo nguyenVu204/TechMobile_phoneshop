@@ -128,6 +128,12 @@ namespace PhoneShop.API.Controllers
                 BrandId = product.BrandId ?? 0,
                 Description = product.Description,
                 Thumbnail = product.Thumbnail,
+                Screen = product.Screen,
+                Chip = product.Chip,
+                Battery = product.Battery,
+                RearCamera = product.RearCamera,
+                FrontCamera = product.FrontCamera,
+                OperatingSystem = product.OperatingSystem,
                 Variants = product.Variants.Select(v => new ProductVariantDto
                 {
                     Id = v.Id,
@@ -154,7 +160,13 @@ namespace PhoneShop.API.Controllers
                 Name = dto.Name,
                 Description = dto.Description,
                 Thumbnail = dto.Thumbnail,
-                BrandId = dto.BrandId
+                BrandId = dto.BrandId,
+                Screen = dto.Screen,
+                Chip = dto.Chip,
+                Battery = dto.Battery,
+                RearCamera = dto.RearCamera,
+                FrontCamera = dto.FrontCamera,
+                OperatingSystem = dto.OperatingSystem
             };
 
             // 2. Tạo Variants (Con)
@@ -214,6 +226,12 @@ namespace PhoneShop.API.Controllers
             product.Description = dto.Description;
             product.Thumbnail = dto.Thumbnail;
             product.BrandId = dto.BrandId;
+            product.Screen = dto.Screen;
+            product.Chip = dto.Chip;
+            product.Battery = dto.Battery;
+            product.RearCamera = dto.RearCamera;
+            product.FrontCamera = dto.FrontCamera;
+            product.OperatingSystem = dto.OperatingSystem;
 
             // 3. Xử lý danh sách con (Variants)
             foreach (var vDto in dto.Variants)

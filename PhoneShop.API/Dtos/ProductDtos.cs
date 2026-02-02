@@ -22,6 +22,13 @@
 
         public int BrandId { get; set; }
 
+        public string? Screen { get; set; }
+        public string? Chip { get; set; }
+        public string? Battery { get; set; }
+        public string? RearCamera { get; set; }
+        public string? FrontCamera { get; set; }
+        public string? OperatingSystem { get; set; }
+
         // Danh sách các phiên bản (Màu, Ram, Rom)
         public List<ProductVariantDto> Variants { get; set; } = new List<ProductVariantDto>();
     }
@@ -45,6 +52,13 @@
         public string? Thumbnail { get; set; } // Link ảnh đại diện
         public int BrandId { get; set; } // ID của hãng (Apple, Samsung...)
 
+        public string? Screen { get; set; }
+        public string? Chip { get; set; }
+        public string? Battery { get; set; }
+        public string? RearCamera { get; set; }
+        public string? FrontCamera { get; set; }
+        public string? OperatingSystem { get; set; }
+
         // Danh sách các biến thể đi kèm
         public List<CreateProductVariantDto> Variants { get; set; } = new List<CreateProductVariantDto>();
     }
@@ -66,6 +80,13 @@
         public string? Description { get; set; }
         public string? Thumbnail { get; set; }
         public int BrandId { get; set; }
+
+        public string? Screen { get; set; }
+        public string? Chip { get; set; }
+        public string? Battery { get; set; }
+        public string? RearCamera { get; set; }
+        public string? FrontCamera { get; set; }
+        public string? OperatingSystem { get; set; }
 
         public List<UpdateProductVariantDto> Variants { get; set; } = new List<UpdateProductVariantDto>();
     }
