@@ -45,7 +45,7 @@ export default function OrderManager() {
     setLoading(true);
     try {
       const res = await axiosClient.get(
-        `/orders?search=${debouncedSearch}&page=${page}&limit=10`
+        `/orders?search=${debouncedSearch}&page=${page}&limit=10`,
       );
       setOrders(res.data.items);
       setTotalPages(res.data.totalPages);
@@ -59,8 +59,8 @@ export default function OrderManager() {
 
   // Hàm reload lại đơn hàng sau khi gán xong
   const reloadOrder = async () => {
-      const res = await axiosClient.get(`/orders/${selectedOrder.id}`); // API lấy chi tiết đơn (cần cập nhật API này trả về serialNumber đã gán)
-      setSelectedOrder(res.data);
+    const res = await axiosClient.get(`/orders/${selectedOrder.id}`); // API lấy chi tiết đơn (cần cập nhật API này trả về serialNumber đã gán)
+    setSelectedOrder(res.data);
   };
 
   // Hàm xử lý thay đổi trạng thái Đơn hàng
@@ -69,12 +69,12 @@ export default function OrderManager() {
       await axiosClient.put(
         `/orders/${orderId}/status`,
         JSON.stringify(newStatus),
-        { headers: { "Content-Type": "application/json" } }
+        { headers: { "Content-Type": "application/json" } },
       );
       toast.success(`Cập nhật #${orderId} thành công!`);
 
       const updatedOrders = orders.map((o) =>
-        o.id === orderId ? { ...o, status: newStatus } : o
+        o.id === orderId ? { ...o, status: newStatus } : o,
       );
       setOrders(updatedOrders);
 
@@ -92,7 +92,7 @@ export default function OrderManager() {
       !confirm(
         `Xác nhận đổi trạng thái thanh toán sang: ${
           newStatus === "Paid" ? "Đã thanh toán" : "Chưa thanh toán"
-        }?`
+        }?`,
       )
     )
       return;
@@ -103,13 +103,13 @@ export default function OrderManager() {
         JSON.stringify(newStatus),
         {
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
 
       toast.success("Cập nhật thanh toán thành công!");
 
       const updatedOrders = orders.map((o) =>
-        o.id === orderId ? { ...o, paymentStatus: newStatus } : o
+        o.id === orderId ? { ...o, paymentStatus: newStatus } : o,
       );
       setOrders(updatedOrders);
     } catch (error) {
@@ -127,7 +127,7 @@ export default function OrderManager() {
       link.href = url;
       link.setAttribute(
         "download",
-        `Orders_${new Date().toISOString().split("T")[0]}.xlsx`
+        `Orders_${new Date().toISOString().split("T")[0]}.xlsx`,
       );
       document.body.appendChild(link);
       link.click();
@@ -140,8 +140,8 @@ export default function OrderManager() {
 
   // --- HÀM HỖ TRỢ ĐẾM IMEI ---
   const getAssignedCount = (serialString) => {
-      if (!serialString) return 0;
-      return serialString.split(',').length; // Đếm dựa trên dấu phẩy
+    if (!serialString) return 0;
+    return serialString.split(",").length; // Đếm dựa trên dấu phẩy
   };
 
   // Style cho Trạng thái Đơn hàng
@@ -276,7 +276,7 @@ export default function OrderManager() {
                     <td className="p-4 text-center">
                       <select
                         className={`appearance-none pl-3 pr-8 py-1 rounded-full text-xs font-bold border ring-1 cursor-pointer focus:outline-none focus:ring-2 ${getPaymentStatusStyle(
-                          order.paymentStatus
+                          order.paymentStatus,
                         )}`}
                         value={order.paymentStatus}
                         onChange={(e) =>
@@ -292,7 +292,7 @@ export default function OrderManager() {
                     <td className="p-4">
                       <select
                         className={`appearance-none pl-3 pr-8 py-1 rounded-full text-xs font-bold border ring-1 cursor-pointer focus:outline-none focus:ring-2 ${getStatusStyle(
-                          order.status
+                          order.status,
                         )}`}
                         value={order.status}
                         onChange={(e) =>
@@ -368,14 +368,14 @@ export default function OrderManager() {
                 <div className="flex gap-2 mt-1">
                   <span
                     className={`text-[10px] font-bold px-2 py-0.5 rounded border ${getStatusStyle(
-                      selectedOrder.status
+                      selectedOrder.status,
                     )}`}
                   >
                     {selectedOrder.status}
                   </span>
                   <span
                     className={`text-[10px] font-bold px-2 py-0.5 rounded border ${getPaymentStatusStyle(
-                      selectedOrder.paymentStatus
+                      selectedOrder.paymentStatus,
                     )}`}
                   >
                     {selectedOrder.paymentStatus === "Paid"
@@ -451,7 +451,8 @@ export default function OrderManager() {
                               {item.productVariant?.product?.name}
                             </p>
                             <p className="text-xs text-gray-500">
-                              {item.productVariant?.color} - {item.productVariant?.rom}
+                              {item.productVariant?.color} -{" "}
+                              {item.productVariant?.rom}
                             </p>
                           </td>
                           <td className="p-3 text-right">
@@ -461,31 +462,27 @@ export default function OrderManager() {
                           <td className="p-3 text-right font-bold">
                             {(item.unitPrice * item.quantity).toLocaleString()}
                           </td>
-                          
+
                           {/* --- CỘT IMEI --- */}
                           <td className="p-3 text-right min-w-[120px]">
                             <div className="flex flex-col items-end gap-1">
-                                {/* 1. Hiển thị các IMEI đã gán */}
-                                {item.serialNumber && item.serialNumber.split(',').map((imei, idx) => (
-                                    <span key={idx} className="font-mono text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded border border-green-200 block w-fit">
-                                        {imei.trim()}
-                                    </span>
-                                ))}
-
-                                {/* 2. Nút Gán (Chỉ hiện khi chưa gán đủ số lượng) */}
-                                {!isFullyAssigned && (selectedOrder.status === 'Pending' || selectedOrder.status === 'Confirmed') && (
-                                    <button 
-                                      onClick={() => setAssigningItem(item)}
-                                      className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded font-bold hover:bg-blue-100 border border-blue-200 flex items-center gap-1"
+                              {/* Luôn hiển thị IMEI vì đã được gán tự động */}
+                              {item.serialNumber ? (
+                                item.serialNumber
+                                  .split(",")
+                                  .map((imei, idx) => (
+                                    <span
+                                      key={idx}
+                                      className="font-mono text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded border border-green-200 block w-fit"
                                     >
-                                        <Plus size={12}/> Gán ({assignedCount}/{item.quantity})
-                                    </button>
-                                )}
-                                
-                                {/* 3. Trạng thái nếu đã đủ */}
-                                {isFullyAssigned && (
-                                    <span className="text-[10px] text-gray-400 italic">Đủ số lượng</span>
-                                )}
+                                      {imei.trim()}
+                                    </span>
+                                  ))
+                              ) : (
+                                <span className="text-red-500 text-xs italic">
+                                  Lỗi: Chưa có IMEI
+                                </span>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -501,12 +498,12 @@ export default function OrderManager() {
 
       {/* Render Modal Gán IMEI */}
       {assigningItem && (
-          <AssignImeiModal 
-              orderId={selectedOrder.id}
-              variant={assigningItem}
-              onClose={() => setAssigningItem(null)}
-              onSuccess={reloadOrder}
-          />
+        <AssignImeiModal
+          orderId={selectedOrder.id}
+          variant={assigningItem}
+          onClose={() => setAssigningItem(null)}
+          onSuccess={reloadOrder}
+        />
       )}
     </div>
   );

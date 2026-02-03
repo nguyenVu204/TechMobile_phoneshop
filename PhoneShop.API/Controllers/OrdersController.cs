@@ -25,63 +25,87 @@ namespace PhoneShop.API.Controllers
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto dto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            // Tạo đối tượng Order
-            var order = new Order
+
+            // Sử dụng Transaction để đảm bảo tính toàn vẹn dữ liệu
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
             {
-                CustomerName = dto.CustomerName,
-                CustomerPhone = dto.CustomerPhone,
-                ShippingAddress = dto.ShippingAddress,
-                OrderDate = DateTime.Now,
-                Status = "Pending",
-                UserId = userId,
-                PaymentMethod = dto.PaymentMethod ?? "COD",
-                PaymentStatus = "Unpaid" // Mặc định tạo đơn là chưa thanh toán
-            };
-
-            decimal totalAmount = 0;
-
-            // Duyệt qua từng sản phẩm trong giỏ để tạo OrderDetail
-            foreach (var item in dto.Items)
-            {
-                // Tìm sản phẩm trong DB để lấy giá chuẩn
-                var variant = await _context.ProductVariants.FindAsync(item.VariantId);
-
-                if (variant == null)
+                var order = new Order
                 {
-                    return BadRequest($"Sản phẩm ID {item.VariantId} không tồn tại.");
-                }
-
-                // Kiểm tra tồn kho (Bonus)
-                if (variant.StockQuantity < item.Quantity)
-                {
-                    return BadRequest($"Sản phẩm màu {variant.Color} đã hết hàng hoặc không đủ số lượng.");
-                }
-
-                // Trừ tồn kho
-                variant.StockQuantity -= item.Quantity;
-
-                // Tạo chi tiết đơn
-                var orderDetail = new OrderDetail
-                {
-                    ProductVariantId = item.VariantId,
-                    Quantity = item.Quantity,
-                    UnitPrice = variant.Price, // Lấy giá từ DB
-                    Order = order
+                    CustomerName = dto.CustomerName,
+                    CustomerPhone = dto.CustomerPhone,
+                    ShippingAddress = dto.ShippingAddress,
+                    OrderDate = DateTime.Now,
+                    Status = "Pending",
+                    UserId = userId,
+                    PaymentMethod = dto.PaymentMethod ?? "COD",
+                    PaymentStatus = "Unpaid"
                 };
 
-                // Cộng dồn tổng tiền
-                totalAmount += variant.Price * item.Quantity;
+                decimal totalAmount = 0;
 
-                _context.OrderDetails.Add(orderDetail);
+                foreach (var item in dto.Items)
+                {
+                    var variant = await _context.ProductVariants.FindAsync(item.VariantId);
+                    if (variant == null) return BadRequest($"Sản phẩm ID {item.VariantId} không tồn tại.");
+
+                    // --- 1. LOGIC TỰ ĐỘNG LẤY IMEI (QUAN TRỌNG) ---
+                    // Lấy ra n serial numbers đang Available, ưu tiên nhập trước (Id nhỏ)
+                    var availableSerials = await _context.ProductSerialNumbers
+                        .Where(s => s.ProductVariantId == item.VariantId && s.Status == "Available")
+                        .OrderBy(s => s.Id) // FIFO: Xuất cái cũ trước
+                        .Take(item.Quantity)
+                        .ToListAsync();
+
+                    // Kiểm tra xem có đủ IMEI để bán không?
+                    if (availableSerials.Count < item.Quantity)
+                    {
+                        return BadRequest($"Sản phẩm {variant.Color} chỉ còn {availableSerials.Count} máy (IMEI) khả dụng, không đủ số lượng {item.Quantity} yêu cầu.");
+                    }
+
+                    // Cập nhật trạng thái các IMEI này thành SOLD
+                    foreach (var serial in availableSerials)
+                    {
+                        serial.Status = "Sold";
+                        serial.Order = order; // Link với Order này (EF Core tự hiểu OrderId sau khi save)
+                    }
+
+                    // Tạo chuỗi IMEI để lưu vào OrderDetail (VD: "IMEI123, IMEI456")
+                    string serialString = string.Join(", ", availableSerials.Select(s => s.SerialNumber));
+                    // ---------------------------------------------------
+
+                    // Cập nhật tồn kho (Trừ đi số lượng)
+                    // variant.StockQuantity -= item.Quantity; // Nếu bạn quản lý kho bằng số đếm
+                    // Hoặc chuẩn hơn: StockQuantity sẽ tự tính bằng số lượng Available còn lại (nếu bạn muốn)
+                    variant.StockQuantity -= item.Quantity;
+
+                    var orderDetail = new OrderDetail
+                    {
+                        ProductVariantId = item.VariantId,
+                        Quantity = item.Quantity,
+                        UnitPrice = variant.Price,
+                        Order = order,
+                        SerialNumber = serialString // <--- LƯU LUÔN TẠI ĐÂY
+                    };
+
+                    totalAmount += variant.Price * item.Quantity;
+                    _context.OrderDetails.Add(orderDetail);
+                }
+
+                order.TotalAmount = totalAmount;
+                _context.Orders.Add(order);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync(); // Xác nhận giao dịch thành công
+
+                return Ok(new { Message = "Đặt hàng thành công", OrderId = order.Id, Total = totalAmount });
             }
-
-            order.TotalAmount = totalAmount;
-            _context.Orders.Add(order);
-
-            // Lưu tất cả vào SQL
-            await _context.SaveChangesAsync();
-
-            return Ok(new { Message = "Đặt hàng thành công", OrderId = order.Id, Total = totalAmount });
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(); // Nếu lỗi thì hoàn tác tất cả
+                return StatusCode(500, "Lỗi server: " + ex.Message);
+            }
         }
 
         // GET: api/orders/my-orders
