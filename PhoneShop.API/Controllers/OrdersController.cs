@@ -221,6 +221,66 @@ namespace PhoneShop.API.Controllers
             return Ok(new { Message = "Cập nhật trạng thái thành công" });
         }
 
+        // POST: api/orders/assign-imei
+        [HttpPost("assign-imei")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AssignImeiToOrder([FromBody] AssignImeiDto dto)
+        {
+            // 1. Tìm và kiểm tra IMEI
+            var serial = await _context.ProductSerialNumbers.FindAsync(dto.SerialNumberId);
+            if (serial == null || serial.Status != "Available")
+                return BadRequest("IMEI không tồn tại hoặc đã được bán.");
+
+            // 2. Tìm chi tiết đơn hàng (OrderDetail) tương ứng
+            // Tìm dòng sản phẩm đúng loại (VariantId) trong đơn hàng (OrderId)
+            var orderDetail = await _context.OrderDetails
+                .FirstOrDefaultAsync(od => od.OrderId == dto.OrderId && od.ProductVariantId == dto.ProductVariantId);
+
+            if (orderDetail == null) return NotFound("Không tìm thấy dòng sản phẩm này trong đơn hàng.");
+
+            // 3. Logic Gán IMEI vào OrderDetail
+            // Nếu chưa có thì gán mới, nếu có rồi (trường hợp mua sl > 1) thì nối thêm dấu phẩy
+            if (string.IsNullOrEmpty(orderDetail.SerialNumber))
+            {
+                orderDetail.SerialNumber = serial.SerialNumber;
+            }
+            else
+            {
+                // Kiểm tra xem đã gán đủ số lượng chưa
+                var currentImeis = orderDetail.SerialNumber.Split(", ");
+                if (currentImeis.Length >= orderDetail.Quantity)
+                {
+                    return BadRequest($"Đã gán đủ {orderDetail.Quantity} IMEI cho sản phẩm này rồi.");
+                }
+
+                // Kiểm tra xem IMEI này đã có trong list chưa (tránh gán trùng)
+                if (!orderDetail.SerialNumber.Contains(serial.SerialNumber))
+                {
+                    orderDetail.SerialNumber += ", " + serial.SerialNumber;
+                }
+            }
+
+            // 4. Cập nhật trạng thái IMEI trong kho (Table ProductSerialNumbers)
+            serial.Status = "Sold";
+            serial.OrderId = dto.OrderId;
+
+            // 5. Trừ tồn kho (Logic cũ - giữ nguyên hoặc bỏ nếu bạn dùng count IMEI làm tồn kho)
+            var variant = await _context.ProductVariants.FindAsync(serial.ProductVariantId);
+            if (variant != null)
+            {
+                // Tính lại tồn kho thực tế cho chắc chắn
+                var realStock = await _context.ProductSerialNumbers
+                    .CountAsync(x => x.ProductVariantId == variant.Id && x.Status == "Available");
+
+                // Lưu ý: Lúc này 'serial' đang set Sold nhưng chưa SaveChanges nên count có thể vẫn tính nó.
+                // Tốt nhất cứ trừ tay 1 đơn vị hoặc dùng count - 1
+                variant.StockQuantity -= 1;
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(new { Message = "Đã gán IMEI thành công", SerialNumber = orderDetail.SerialNumber });
+        }
+
         // PUT: api/orders/{id}/payment-status
         [HttpPut("{id}/payment-status")]
         [Authorize(Roles = "Admin")]

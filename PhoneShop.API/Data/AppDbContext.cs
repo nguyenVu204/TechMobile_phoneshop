@@ -17,6 +17,8 @@ namespace PhoneShop.API.Data
         public DbSet<Favorite> Favorites { get; set; }
         public DbSet<Review> Reviews { get; set; }
 
+        public DbSet<ProductSerialNumber> ProductSerialNumbers { get; set; }
+
         // Cấu hình thêm mối quan hệ (Fluent API)
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -31,6 +33,10 @@ namespace PhoneShop.API.Data
 
             builder.Entity<Favorite>()
                 .HasKey(f => new { f.UserId, f.ProductId });
+
+            builder.Entity<ProductSerialNumber>()
+                .ToTable("ProductSerialNumbers");
+
         }
     }
 }

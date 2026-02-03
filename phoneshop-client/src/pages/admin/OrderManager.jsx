@@ -7,15 +7,18 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  Plus,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import axiosClient from "../../api/axiosClient";
 import { useNavigate } from "react-router-dom";
+import AssignImeiModal from "./AssignImeiModal";
 
 export default function OrderManager() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [assigningItem, setAssigningItem] = useState(null); // Item đang được gán IMEI
 
   // State quản lý Tìm kiếm & Phân trang
   const [searchTerm, setSearchTerm] = useState("");
@@ -54,6 +57,12 @@ export default function OrderManager() {
     }
   };
 
+  // Hàm reload lại đơn hàng sau khi gán xong
+  const reloadOrder = async () => {
+      const res = await axiosClient.get(`/orders/${selectedOrder.id}`); // API lấy chi tiết đơn (cần cập nhật API này trả về serialNumber đã gán)
+      setSelectedOrder(res.data);
+  };
+
   // Hàm xử lý thay đổi trạng thái Đơn hàng
   const handleStatusChange = async (orderId, newStatus) => {
     try {
@@ -77,9 +86,8 @@ export default function OrderManager() {
     }
   };
 
-  // Hàm xử lý thay đổi trạng thái Thanh toán (Đã sửa logic cho Select)
+  // Hàm xử lý thay đổi trạng thái Thanh toán
   const handlePaymentStatusChange = async (orderId, newStatus) => {
-    // Không cần toggle nữa, lấy trực tiếp giá trị từ select
     if (
       !confirm(
         `Xác nhận đổi trạng thái thanh toán sang: ${
@@ -128,6 +136,12 @@ export default function OrderManager() {
     } catch (error) {
       toast.error("Lỗi xuất file!");
     }
+  };
+
+  // --- HÀM HỖ TRỢ ĐẾM IMEI ---
+  const getAssignedCount = (serialString) => {
+      if (!serialString) return 0;
+      return serialString.split(',').length; // Đếm dựa trên dấu phẩy
   };
 
   // Style cho Trạng thái Đơn hàng
@@ -421,35 +435,78 @@ export default function OrderManager() {
                       <th className="p-3 font-medium text-right">Giá</th>
                       <th className="p-3 font-medium text-right">SL</th>
                       <th className="p-3 font-medium text-right">Tổng</th>
+                      <th className="p-3 font-medium text-right">IMEI</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {selectedOrder.orderDetails.map((item) => (
-                      <tr key={item.id}>
-                        <td className="p-3">
-                          <p className="font-medium text-gray-800">
-                            {item.productVariant?.product?.name}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {item.productVariant?.color} -{" "}
-                            {item.productVariant?.rom}
-                          </p>
-                        </td>
-                        <td className="p-3 text-right">
-                          {item.unitPrice.toLocaleString()}
-                        </td>
-                        <td className="p-3 text-right">x{item.quantity}</td>
-                        <td className="p-3 text-right font-bold">
-                          {(item.unitPrice * item.quantity).toLocaleString()}
-                        </td>
-                      </tr>
-                    ))}
+                    {selectedOrder.orderDetails.map((item) => {
+                      // Tính toán số lượng đã gán
+                      const assignedCount = getAssignedCount(item.serialNumber);
+                      const isFullyAssigned = assignedCount >= item.quantity;
+
+                      return (
+                        <tr key={item.id}>
+                          <td className="p-3">
+                            <p className="font-medium text-gray-800">
+                              {item.productVariant?.product?.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {item.productVariant?.color} - {item.productVariant?.rom}
+                            </p>
+                          </td>
+                          <td className="p-3 text-right">
+                            {item.unitPrice.toLocaleString()}
+                          </td>
+                          <td className="p-3 text-right">x{item.quantity}</td>
+                          <td className="p-3 text-right font-bold">
+                            {(item.unitPrice * item.quantity).toLocaleString()}
+                          </td>
+                          
+                          {/* --- CỘT IMEI --- */}
+                          <td className="p-3 text-right min-w-[120px]">
+                            <div className="flex flex-col items-end gap-1">
+                                {/* 1. Hiển thị các IMEI đã gán */}
+                                {item.serialNumber && item.serialNumber.split(',').map((imei, idx) => (
+                                    <span key={idx} className="font-mono text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded border border-green-200 block w-fit">
+                                        {imei.trim()}
+                                    </span>
+                                ))}
+
+                                {/* 2. Nút Gán (Chỉ hiện khi chưa gán đủ số lượng) */}
+                                {!isFullyAssigned && (selectedOrder.status === 'Pending' || selectedOrder.status === 'Confirmed') && (
+                                    <button 
+                                      onClick={() => setAssigningItem(item)}
+                                      className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded font-bold hover:bg-blue-100 border border-blue-200 flex items-center gap-1"
+                                    >
+                                        <Plus size={12}/> Gán ({assignedCount}/{item.quantity})
+                                    </button>
+                                )}
+                                
+                                {/* 3. Trạng thái nếu đã đủ */}
+                                {isFullyAssigned && (
+                                    <span className="text-[10px] text-gray-400 italic">Đủ số lượng</span>
+                                )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Render Modal Gán IMEI */}
+      {assigningItem && (
+          <AssignImeiModal 
+              orderId={selectedOrder.id}
+              variant={assigningItem}
+              onClose={() => setAssigningItem(null)}
+              onSuccess={reloadOrder}
+          />
       )}
     </div>
   );

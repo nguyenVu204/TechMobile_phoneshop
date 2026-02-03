@@ -16,5 +16,6 @@ namespace PhoneShop.API.Models
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal UnitPrice { get; set; } // Giá tại thời điểm mua (để sau này giá gốc đổi cũng không ảnh hưởng đơn cũ)
+        public string? SerialNumber { get; set; }
     }
 }

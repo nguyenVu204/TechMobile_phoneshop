@@ -32,7 +32,7 @@ export default function OrderHistoryPage() {
     setLoading(true);
     try {
       const res = await axiosClient.get(
-        `/orders/my-orders?page=${page}&limit=5`
+        `/orders/my-orders?page=${page}&limit=5`,
       );
       setMyOrders(res.data.items);
       setTotalPages(res.data.totalPages);
@@ -51,11 +51,11 @@ export default function OrderHistoryPage() {
         JSON.stringify("Cancelled"),
         {
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
       toast.success("Đã hủy đơn hàng thành công");
       const updatedOrders = myOrders.map((o) =>
-        o.id === orderId ? { ...o, status: "Cancelled" } : o
+        o.id === orderId ? { ...o, status: "Cancelled" } : o,
       );
       setMyOrders(updatedOrders);
       if (selectedOrder)
@@ -154,7 +154,7 @@ export default function OrderHistoryPage() {
                         <span className="text-gray-300">|</span>
                         <span className="text-gray-600 font-medium">
                           {new Date(order.orderDate).toLocaleDateString(
-                            "vi-VN"
+                            "vi-VN",
                           )}
                         </span>
                       </div>
@@ -171,7 +171,7 @@ export default function OrderHistoryPage() {
 
                         <span
                           className={`px-4 py-1.5 rounded-full text-xs font-bold border uppercase tracking-wider ${getStatusColor(
-                            order.status
+                            order.status,
                           )}`}
                         >
                           {translateStatus(order.status)}
@@ -234,23 +234,24 @@ export default function OrderHistoryPage() {
                         </span>
                       </div>
                       <div className="flex gap-3">
-                        {order.status === "Pending" && order.paymentStatus !== "Paid" && (
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handlePayment(order.id)}
-                              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition flex items-center gap-2 shadow-sm shadow-blue-200"
-                            >
-                              Thanh toán VNPay
-                            </button>
+                        {order.status === "Pending" &&
+                          order.paymentStatus !== "Paid" && (
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handlePayment(order.id)}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition flex items-center gap-2 shadow-sm shadow-blue-200"
+                              >
+                                Thanh toán VNPay
+                              </button>
 
-                            <button
-                              onClick={() => handleCancelOrder(order.id)}
-                              className="px-4 py-2 border border-red-200 text-red-600 rounded-lg text-sm font-bold hover:bg-red-50 transition flex items-center gap-2"
-                            >
-                              <Ban size={16} /> Hủy đơn
-                            </button>
-                          </div>
-                        )}
+                              <button
+                                onClick={() => handleCancelOrder(order.id)}
+                                className="px-4 py-2 border border-red-200 text-red-600 rounded-lg text-sm font-bold hover:bg-red-50 transition flex items-center gap-2"
+                              >
+                                <Ban size={16} /> Hủy đơn
+                              </button>
+                            </div>
+                          )}
                         <button
                           onClick={() => setSelectedOrder(order)}
                           className="px-6 py-2 bg-white border border-gray-300 rounded-lg text-sm font-bold text-gray-700 hover:border-blue-500 hover:text-blue-600 hover:shadow-md transition flex items-center gap-2"
@@ -311,7 +312,7 @@ export default function OrderHistoryPage() {
                 </h2>
                 <span
                   className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${getStatusColor(
-                    selectedOrder.status
+                    selectedOrder.status,
                   )}`}
                 >
                   {translateStatus(selectedOrder.status)}
@@ -369,6 +370,23 @@ export default function OrderHistoryPage() {
                           {item.productVariant?.color}{" "}
                           {item.productVariant?.rom}
                         </p>
+                        {item.serialNumber && (
+                          <div className="mt-1">
+                            <p className="text-[10px] text-gray-400 font-bold uppercase">
+                              Serial Number / IMEI:
+                            </p>
+                            <div className="flex flex-wrap gap-1">
+                              {item.serialNumber.split(",").map((imei, idx) => (
+                                <span
+                                  key={idx}
+                                  className="text-[10px] font-mono bg-gray-100 border border-gray-300 px-1.5 rounded text-gray-600"
+                                >
+                                  {imei.trim()}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </td>
                       <td className="p-2 text-right">
                         {item.unitPrice.toLocaleString()}
@@ -385,23 +403,24 @@ export default function OrderHistoryPage() {
 
             <div className="p-4 border-t text-center flex justify-end gap-2 bg-gray-50">
               {/* --- SỬA ĐIỀU KIỆN TRONG MODAL --- */}
-              {selectedOrder.status === "Pending" && selectedOrder.paymentStatus !== "Paid" && (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handlePayment(selectedOrder.id)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition flex items-center gap-2 shadow-sm shadow-blue-200"
-                  >
-                    Thanh toán VNPay
-                  </button>
+              {selectedOrder.status === "Pending" &&
+                selectedOrder.paymentStatus !== "Paid" && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handlePayment(selectedOrder.id)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition flex items-center gap-2 shadow-sm shadow-blue-200"
+                    >
+                      Thanh toán VNPay
+                    </button>
 
-                  <button
-                    onClick={() => handleCancelOrder(selectedOrder.id)}
-                    className="px-4 py-2 border border-red-200 text-red-600 rounded-lg text-sm font-bold hover:bg-red-50 transition flex items-center gap-2"
-                  >
-                    <Ban size={16} /> Hủy đơn
-                  </button>
-                </div>
-              )}
+                    <button
+                      onClick={() => handleCancelOrder(selectedOrder.id)}
+                      className="px-4 py-2 border border-red-200 text-red-600 rounded-lg text-sm font-bold hover:bg-red-50 transition flex items-center gap-2"
+                    >
+                      <Ban size={16} /> Hủy đơn
+                    </button>
+                  </div>
+                )}
               <button
                 onClick={() => setSelectedOrder(null)}
                 className="px-6 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 font-medium text-gray-700"

@@ -244,7 +244,7 @@ namespace PhoneShop.API.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Brands");
+                    b.ToTable("Brands", (string)null);
                 });
 
             modelBuilder.Entity("PhoneShop.API.Models.Favorite", b =>
@@ -262,7 +262,7 @@ namespace PhoneShop.API.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("Favorites");
+                    b.ToTable("Favorites", (string)null);
                 });
 
             modelBuilder.Entity("PhoneShop.API.Models.Order", b =>
@@ -310,7 +310,7 @@ namespace PhoneShop.API.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Orders");
+                    b.ToTable("Orders", (string)null);
                 });
 
             modelBuilder.Entity("PhoneShop.API.Models.OrderDetail", b =>
@@ -330,6 +330,9 @@ namespace PhoneShop.API.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
+                    b.Property<string>("SerialNumber")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<decimal>("UnitPrice")
                         .HasColumnType("decimal(18,2)");
 
@@ -339,7 +342,7 @@ namespace PhoneShop.API.Migrations
 
                     b.HasIndex("ProductVariantId");
 
-                    b.ToTable("OrderDetails");
+                    b.ToTable("OrderDetails", (string)null);
                 });
 
             modelBuilder.Entity("PhoneShop.API.Models.Product", b =>
@@ -391,7 +394,41 @@ namespace PhoneShop.API.Migrations
 
                     b.HasIndex("BrandId");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
+                });
+
+            modelBuilder.Entity("PhoneShop.API.Models.ProductSerialNumber", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductVariantId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SerialNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("ProductVariantId");
+
+                    b.ToTable("ProductSerialNumbers", (string)null);
                 });
 
             modelBuilder.Entity("PhoneShop.API.Models.ProductVariant", b =>
@@ -430,7 +467,7 @@ namespace PhoneShop.API.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductVariants");
+                    b.ToTable("ProductVariants", (string)null);
                 });
 
             modelBuilder.Entity("PhoneShop.API.Models.Review", b =>
@@ -465,7 +502,7 @@ namespace PhoneShop.API.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Reviews");
+                    b.ToTable("Reviews", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -576,6 +613,23 @@ namespace PhoneShop.API.Migrations
                     b.Navigation("Brand");
                 });
 
+            modelBuilder.Entity("PhoneShop.API.Models.ProductSerialNumber", b =>
+                {
+                    b.HasOne("PhoneShop.API.Models.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId");
+
+                    b.HasOne("PhoneShop.API.Models.ProductVariant", "ProductVariant")
+                        .WithMany("SerialNumbers")
+                        .HasForeignKey("ProductVariantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("ProductVariant");
+                });
+
             modelBuilder.Entity("PhoneShop.API.Models.ProductVariant", b =>
                 {
                     b.HasOne("PhoneShop.API.Models.Product", "Product")
@@ -619,6 +673,11 @@ namespace PhoneShop.API.Migrations
             modelBuilder.Entity("PhoneShop.API.Models.Product", b =>
                 {
                     b.Navigation("Variants");
+                });
+
+            modelBuilder.Entity("PhoneShop.API.Models.ProductVariant", b =>
+                {
+                    b.Navigation("SerialNumbers");
                 });
 #pragma warning restore 612, 618
         }

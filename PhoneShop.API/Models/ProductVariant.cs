@@ -19,5 +19,7 @@ namespace PhoneShop.API.Models
         public decimal Price { get; set; } // Giá bán biến động theo RAM/ROM
 
         public int StockQuantity { get; set; } // Số lượng tồn kho
+
+        public List<ProductSerialNumber> SerialNumbers { get; set; } = new List<ProductSerialNumber>();
     }
 }
