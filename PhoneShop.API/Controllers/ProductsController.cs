@@ -270,6 +270,33 @@ namespace PhoneShop.API.Controllers
             return Ok(new { Message = "Cập nhật thành công!" });
         }
 
+        // --- API ADMIN: Xóa 1 biến thể (Product Variant) ---
+        // DELETE: api/products/variant/5
+        [HttpDelete("variant/{variantId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteVariant(int variantId)
+        {
+            var variant = await _context.ProductVariants.FindAsync(variantId);
+            if (variant == null) return NotFound("Không tìm thấy phiên bản này.");
+
+            bool isUsedInOrder = await _context.OrderDetails.AnyAsync(od => od.ProductVariantId == variantId);
+            if(isUsedInOrder)
+            {
+                return BadRequest("Không thể xóa vì đã có khách hàng mua phiên bản này (Liên quan lịch sử đơn hàng). Giải pháp: Hãy set Tồn kho = 0.");
+            }
+
+            var serials = await _context.ProductSerialNumbers.Where(s => s.ProductVariantId == variantId).ToListAsync();
+            if (serials.Any())
+            {
+                _context.ProductSerialNumbers.RemoveRange(serials);
+            }
+
+            _context.ProductVariants.Remove(variant);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Message = "Xóa phiên bản thành công" });
+        }
+
         // --- 1. XUẤT EXCEL (EXPORT) ---
         [HttpGet("export")]
         [Authorize(Roles = "Admin")]

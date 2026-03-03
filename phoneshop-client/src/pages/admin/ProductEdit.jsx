@@ -7,7 +7,8 @@ import {
   Loader2,
   Link as LinkIcon,
   Image as ImageIcon,
-  List
+  List,
+  Trash2
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -156,6 +157,33 @@ export default function ProductEdit() {
         imageUrl: "",
       },
     ]);
+
+  const handleRemoveVariant = async (index) => {
+    const variantToRemove = variants[index];
+
+    if (variants.length === 1) {
+      return toast.error("Sản phẩm phải có ít nhất 1 phiên bản!");
+    }
+
+    // Trường hợp 1: Biến thể vừa mới bấm thêm (chưa lưu DB), chỉ cần xóa ở giao diện
+    if (variantToRemove.id === 0) {
+      setVariants(variants.filter((_, i) => i !== index));
+      return;
+    }
+
+    // Trường hợp 2: Biến thể đã có trong Database -> Cần gọi API xóa
+    if (confirm(`Bạn có chắc muốn xóa phiên bản: ${variantToRemove.color} - ${variantToRemove.rom} không?`)) {
+      try {
+        await axiosClient.delete(`/products/variant/${variantToRemove.id}`);
+        toast.success("Đã xóa phiên bản thành công!");
+        // Xóa xong cập nhật lại giao diện
+        setVariants(variants.filter((_, i) => i !== index));
+      } catch (error) {
+        console.error(error);
+        toast.error(error.response?.data || "Không thể xóa phiên bản này.");
+      }
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -406,6 +434,13 @@ export default function ProductEdit() {
                 key={index}
                 className="bg-gray-50 p-4 rounded border relative group"
               >
+              <button 
+                   onClick={() => handleRemoveVariant(index)}
+                   className="absolute top-2 right-2 text-gray-400 hover:text-red-500 p-1.5 bg-white rounded shadow-sm border border-gray-100 transition-colors"
+                   title="Xóa phiên bản này"
+                >
+                    <Trash2 size={16}/>
+                </button>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div>
                     <label className="text-xs font-bold text-gray-500">

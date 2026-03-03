@@ -79,7 +79,7 @@ export default function CartPage() {
         // Xử lý VNPay
         try {
             const vnpayRes = await axiosClient.post('/payment/create-payment-url', {
-                orderId: newOrder.id 
+                orderId: newOrder.orderId || newOrder.OrderId 
             });
             if(vnpayRes.data.url) {
                 window.location.href = vnpayRes.data.url;
