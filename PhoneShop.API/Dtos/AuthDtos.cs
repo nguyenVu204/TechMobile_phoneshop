@@ -24,4 +24,10 @@ namespace PhoneShop.API.Dtos
         [Required]
         public string Password { get; set; } = string.Empty;
     }
+
+    public class GoogleLoginDto
+    {
+        [Required]
+        public string IdToken { get; set; } = string.Empty;
+    }
 }

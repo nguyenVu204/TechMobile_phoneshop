@@ -33,6 +33,7 @@ import NewsEdit from './pages/admin/NewsEdit';
 import NewsPage from './pages/NewsPage';
 import NewsDetail from './pages/NewsDetail';
 import NewsCategoryManager from "./pages/admin/NewsCategoryManager";
+import ConfirmEmail from "./pages/ConfirmEmail";
 
 function App() {
   const { user } = useAuthStore();
@@ -72,6 +73,7 @@ function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/news" element={<NewsPage />} />
           <Route path="/news/:slug" element={<NewsDetail />} />
+          <Route path="/confirm-email" element={<ConfirmEmail />} />
           <Route
             path="/profile"
             element={
