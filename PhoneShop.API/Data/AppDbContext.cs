@@ -18,6 +18,10 @@ namespace PhoneShop.API.Data
         public DbSet<Review> Reviews { get; set; }
 
         public DbSet<ProductSerialNumber> ProductSerialNumbers { get; set; }
+        public DbSet<News> News { get; set; }
+        public DbSet<NewsCategory> NewsCategories { get; set; }
+        public DbSet<NewsCategoryMapping> NewsCategoryMappings { get; set; }
+        public DbSet<NewsComment> NewsComments { get; set; }
 
         // Cấu hình thêm mối quan hệ (Fluent API)
         protected override void OnModelCreating(ModelBuilder builder)
@@ -36,6 +40,19 @@ namespace PhoneShop.API.Data
 
             builder.Entity<ProductSerialNumber>()
                 .ToTable("ProductSerialNumbers");
+
+            builder.Entity<NewsCategoryMapping>()
+                .HasKey(ncm => new { ncm.NewsId, ncm.CategoryId });
+
+            builder.Entity<NewsCategoryMapping>()
+                .HasOne(ncm => ncm.News)
+                .WithMany(n => n.CategoryMappings)
+                .HasForeignKey(ncm => ncm.NewsId);
+
+            builder.Entity<NewsCategoryMapping>()
+                .HasOne(ncm => ncm.Category)
+                .WithMany(c => c.NewsMappings)
+                .HasForeignKey(ncm => ncm.CategoryId);
 
         }
     }

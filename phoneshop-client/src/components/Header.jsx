@@ -87,6 +87,8 @@ export default function Header() {
             )}
           </Link>
 
+          <Link to="/news" className="text-gray-600 hover:text-blue-600 font-medium">Tin tức</Link>
+
           {user ? (
             // --- DROPDOWN MENU USER ---
             <div className="relative group py-4">

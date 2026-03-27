@@ -27,6 +27,12 @@ import ShopPage from './pages/ShopPage';
 import PaymentResultPage from './pages/PaymentResultPage';
 import AboutPage from "./pages/AboutPage";
 import ContactPage from "./pages/ContactPage";
+import NewsManager from './pages/admin/NewsManager';
+import NewsCreate from './pages/admin/NewsCreate';
+import NewsEdit from './pages/admin/NewsEdit';
+import NewsPage from './pages/NewsPage';
+import NewsDetail from './pages/NewsDetail';
+import NewsCategoryManager from "./pages/admin/NewsCategoryManager";
 
 function App() {
   const { user } = useAuthStore();
@@ -64,6 +70,8 @@ function App() {
           <Route path="/payment-result" element={<PaymentResultPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/news" element={<NewsPage />} />
+          <Route path="/news/:slug" element={<NewsDetail />} />
           <Route
             path="/profile"
             element={
@@ -94,6 +102,10 @@ function App() {
             <Route path="users" element={<UserManager />} />
             <Route path="brands" element={<BrandManager />} />
             <Route path="orders/:id/invoice" element={<InvoicePage />} />
+            <Route path="news" element={<NewsManager />} />
+            <Route path="news/create" element={<NewsCreate />} />
+            <Route path="news/edit/:id" element={<NewsEdit />} />
+            <Route path="news/categories" element={<NewsCategoryManager />} />
           </Route>
         </Route>
       </Routes>
