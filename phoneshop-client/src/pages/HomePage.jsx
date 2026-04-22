@@ -3,8 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { 
   ShoppingCart, Heart, ArrowRight, Truck, ShieldCheck, 
   Headphones, RefreshCw, Zap, Star, ChevronRight, ChevronLeft,
-  Store, Info, Phone, LayoutGrid, Tag, TrendingUp, Award,
-  Clock, Gift, Percent, Eye, Search, Bell, Sparkles, Newspaper
+  Tag, TrendingUp, Award, Clock, Gift, Eye, Search, Smartphone, Shield, CreditCard, Newspaper
 } from "lucide-react";
 import axiosClient from "../api/axiosClient";
 import useFavoriteStore from '../stores/useFavoriteStore';
@@ -27,11 +26,11 @@ function CountdownTimer({ targetHours = 8 }) {
   }, []);
   const pad = n => String(n).padStart(2, "0");
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1.5">
       {[pad(time.h), pad(time.m), pad(time.s)].map((v, i) => (
-        <span key={i} className="flex items-center gap-1">
-          <span className="bg-gray-900 text-white font-mono font-black text-sm px-2 py-1 rounded-md min-w-[32px] text-center tabular-nums">{v}</span>
-          {i < 2 && <span className="text-gray-900 font-black text-sm">:</span>}
+        <span key={i} className="flex items-center gap-1.5">
+          <span className="bg-red-600 text-white font-mono font-black text-sm px-2.5 py-1 rounded-md min-w-[36px] text-center shadow-inner tabular-nums">{v}</span>
+          {i < 2 && <span className="text-red-600 font-black text-lg">:</span>}
         </span>
       ))}
     </div>
@@ -41,80 +40,72 @@ function CountdownTimer({ targetHours = 8 }) {
 /* ─── PRODUCT CARD ─── */
 function ProductCard({ product, label, labelColor, badge }) {
   const { favoriteIds, toggleFavorite } = useFavoriteStore();
-  const [viewed, setViewed] = useState(false);
   const isFav = favoriteIds.includes(product.id);
 
   return (
-    <Link to={`/product/${product.id}`} className="group h-full block" onMouseEnter={() => setViewed(true)}>
-      <div className="bg-white rounded-2xl shadow-sm hover:shadow-2xl hover:shadow-blue-100/60 transition-all duration-500 border border-gray-100 h-full flex flex-col relative overflow-hidden hover:-translate-y-2">
+    <Link to={`/product/${product.id}`} className="group h-full block">
+      <div className="bg-white rounded-2xl shadow-sm hover:shadow-2xl hover:shadow-blue-100/60 transition-all duration-500 border border-gray-100 h-full flex flex-col relative overflow-hidden hover:-translate-y-1.5">
         
         {/* Shimmer overlay on hover */}
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-0"
-          style={{ background: "linear-gradient(135deg, transparent 40%, rgba(59,130,246,0.04) 100%)" }} />
+          style={{ background: "linear-gradient(135deg, transparent 40%, rgba(59,130,246,0.03) 100%)" }} />
 
         {/* Heart Button */}
         <button
           onClick={e => { e.preventDefault(); toggleFavorite(product.id); }}
-          className={`absolute top-3 right-3 z-20 p-2 rounded-full shadow-md border transition-all duration-300 ${isFav ? 'bg-red-500 border-red-500' : 'bg-white/90 border-gray-100 hover:border-red-200'}`}
+          className={`absolute top-3 right-3 z-20 p-2 rounded-full shadow-sm border transition-all duration-300 ${isFav ? 'bg-red-50 text-red-500 border-red-100' : 'bg-white/90 border-gray-100 hover:border-red-200 hover:text-red-400 text-gray-300'}`}
         >
-          <Heart size={16} className={isFav ? "fill-white text-white" : "text-gray-400 group-hover:text-red-400"} />
+          <Heart size={16} className={isFav ? "fill-current" : ""} />
         </button>
 
         {/* Badge */}
         {badge && (
           <div className="absolute top-3 left-3 z-20">
-            <span className={`text-white text-[9px] font-black px-2 py-1 rounded-full tracking-wider shadow-md ${labelColor || 'bg-blue-500'}`}>
+            <span className={`text-white text-[10px] font-black px-2.5 py-1 rounded-md tracking-wider shadow-sm ${labelColor || 'bg-blue-500'}`}>
               {label}
             </span>
           </div>
         )}
 
-        {/* Image */}
-        <div className="relative h-52 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden rounded-t-2xl">
+        {/* Image Area */}
+        <div className="relative h-56 bg-white flex items-center justify-center p-6 overflow-hidden rounded-t-2xl group-hover:bg-gray-50/50 transition-colors">
           {product.thumbnail
             ? <img src={product.thumbnail} alt={product.name}
-                className="h-40 object-contain group-hover:scale-115 transition-transform duration-700 drop-shadow-lg" />
+                className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700" />
             : <span className="text-gray-300 text-xs">No image</span>}
           
           {/* Quick view overlay */}
-          <div className="absolute inset-0 bg-blue-600/0 group-hover:bg-blue-600/5 transition-colors duration-300 flex items-end justify-center pb-3 opacity-0 group-hover:opacity-100">
-            <span className="bg-white/90 backdrop-blur-sm text-blue-700 text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-              <Eye size={10}/> Xem nhanh
+          <div className="absolute inset-0 bg-blue-600/0 group-hover:bg-blue-600/5 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+            <span className="bg-white/95 backdrop-blur-sm text-blue-600 text-xs font-bold px-4 py-2 rounded-full flex items-center gap-1.5 shadow-lg translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+              <Eye size={14}/> Xem chi tiết
             </span>
           </div>
         </div>
 
-        {/* Info */}
-        <div className="flex-1 flex flex-col p-4">
-          <p className="text-[10px] text-blue-500 font-black uppercase tracking-widest mb-1">{product.brandName}</p>
+        {/* Info Area */}
+        <div className="flex-1 flex flex-col p-5 pt-2">
+          <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1.5">{product.brandName}</p>
           <h3 className="font-bold text-gray-800 text-sm leading-snug group-hover:text-blue-600 transition-colors duration-200 line-clamp-2 mb-2">
             {product.name}
           </h3>
           
-          {/* Stars */}
-          <div className="flex items-center gap-1 mb-3">
-            {[1,2,3,4,5].map(s => (
-              <Star key={s} size={11} className="fill-amber-400 text-amber-400"/>
-            ))}
-            <span className="text-[10px] text-gray-400 ml-1">(120)</span>
+          <div className="flex items-center gap-1 mb-4">
+            {[1,2,3,4,5].map(s => <Star key={s} size={12} className="fill-amber-400 text-amber-400"/>)}
+            <span className="text-xs text-gray-400 ml-1 font-medium">(12 đánh giá)</span>
           </div>
 
-          {/* Price row */}
           <div className="mt-auto flex items-center justify-between">
             <div>
-              <div className="text-red-500 font-black text-xl leading-tight">
-                {product.minPrice?.toLocaleString("vi-VN")}₫
+              <div className="text-red-600 font-black text-lg leading-tight">
+                {product.minPrice?.toLocaleString("vi-VN")} ₫
               </div>
-              <div className="text-gray-400 text-[10px] line-through">
-                {Math.round(product.minPrice * 1.15).toLocaleString("vi-VN")}₫
+              <div className="text-gray-400 text-xs line-through mt-0.5">
+                {Math.round(product.minPrice * 1.15).toLocaleString("vi-VN")} ₫
               </div>
             </div>
-            <button
-              onClick={e => e.preventDefault()}
-              className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-blue-200 group-hover:shadow-md"
-            >
-              <ShoppingCart size={17} />
-            </button>
+            <div className="w-10 h-10 rounded-full bg-gray-50 text-blue-600 border border-gray-100 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-sm">
+              <ShoppingCart size={18} />
+            </div>
           </div>
         </div>
       </div>
@@ -130,61 +121,51 @@ function ScrollSection({ title, icon: Icon, iconColor, link, linkText, children,
   };
   return (
     <div className="mb-14">
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-end justify-between mb-6">
         <div className="flex items-center gap-3">
-          {Icon && <div className={`w-8 h-8 rounded-lg ${iconColor} flex items-center justify-center`}><Icon size={18} className="text-white"/></div>}
-          <h2 className="text-xl font-black text-gray-900">{title}</h2>
-          {badge && <span className="text-[10px] font-black tracking-wider px-2.5 py-1 rounded-full bg-red-100 text-red-600 animate-pulse">{badge}</span>}
+          {Icon && <div className={`w-10 h-10 rounded-xl ${iconColor} flex items-center justify-center shadow-sm`}><Icon size={20} className="text-white"/></div>}
+          <div>
+            <h2 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+                {title} {badge && <span className="text-xs font-black tracking-wider px-2 py-0.5 rounded border border-red-200 bg-red-50 text-red-600 animate-pulse">{badge}</span>}
+            </h2>
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => scroll(-1)} className="w-8 h-8 bg-white border border-gray-200 rounded-full flex items-center justify-center hover:border-blue-400 hover:text-blue-600 transition shadow-sm">
-            <ChevronLeft size={16}/>
-          </button>
-          <button onClick={() => scroll(1)} className="w-8 h-8 bg-white border border-gray-200 rounded-full flex items-center justify-center hover:border-blue-400 hover:text-blue-600 transition shadow-sm">
-            <ChevronRight size={16}/>
-          </button>
-          {link && <Link to={link} className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-0.5 ml-1">{linkText} <ChevronRight size={13}/></Link>}
+          {link && <Link to={link} className="text-sm font-bold text-blue-600 hover:underline flex items-center gap-0.5 mr-3 hidden md:flex">{linkText} <ChevronRight size={16}/></Link>}
+          <button onClick={() => scroll(-1)} className="w-9 h-9 bg-white border border-gray-200 rounded-full flex items-center justify-center hover:bg-gray-50 hover:text-blue-600 transition shadow-sm"><ChevronLeft size={18}/></button>
+          <button onClick={() => scroll(1)} className="w-9 h-9 bg-white border border-gray-200 rounded-full flex items-center justify-center hover:bg-gray-50 hover:text-blue-600 transition shadow-sm"><ChevronRight size={18}/></button>
         </div>
       </div>
-      <div ref={ref} className="flex gap-4 overflow-x-auto scrollbar-hide pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      <div ref={ref} className="flex gap-5 overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4 md:mx-0 md:px-0" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {children}
       </div>
     </div>
   );
 }
 
-/* ─── HERO BANNER SLIDES ─── */
+/* ─── NEW FULL-WIDTH HERO SLIDER ─── */
 const heroSlides = [
   {
-    tag: "FLAGSHIP 2024", tagColor: "bg-yellow-400 text-black",
-    title: "iPhone 16 Pro Max", sub: "Titanium Edition",
-    desc: "Chip A18 Pro • Camera 48MP ProRes • Action Button",
+    tag: "ĐẶT TRƯỚC NGAY", tagColor: "bg-white text-black",
+    title: "iPhone 16 Pro Max", sub: "Apple Intelligence. Sức mạnh Titan.",
+    desc: "Sở hữu siêu phẩm mới nhất từ Apple với ưu đãi trợ giá thu cũ đổi mới lên đến 5 triệu đồng. Trả góp 0% qua thẻ tín dụng.",
     cta: "Mua ngay", ctaLink: "/shop?search=iphone",
-    from: "#0f172a", to: "#1e3a8a",
+    from: "#0f172a", to: "#1e293b",
     img: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=2070&auto=format&fit=crop",
     accent: "#3b82f6"
   },
   {
-    tag: "GALAXY AI", tagColor: "bg-purple-400 text-white",
-    title: "Samsung S25 Ultra", sub: "Galaxy Intelligence",
-    desc: "Snapdragon 8 Elite • S Pen tích hợp • AI Camera 200MP",
+    tag: "MỚI RA MẮT", tagColor: "bg-purple-500 text-white",
+    title: "Galaxy S24 Ultra", sub: "Quyền năng AI đỉnh cao",
+    desc: "Mở ra kỷ nguyên di động mới. Khung viền Titanium bền bỉ, camera 200MP zoom không giới hạn.",
     cta: "Khám phá", ctaLink: "/shop?search=samsung",
-    from: "#1a0533", to: "#4c1d95",
+    from: "#2e1065", to: "#4c1d95",
     img: "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?q=80&w=2070&auto=format&fit=crop",
-    accent: "#a855f7"
-  },
-  {
-    tag: "HOT DEAL -30%", tagColor: "bg-red-500 text-white",
-    title: "Xiaomi 15 Pro", sub: "Leica Optics",
-    desc: "Snapdragon 8 Elite • Sạc 90W HyperCharge • Leica Summilux",
-    cta: "Săn deal", ctaLink: "/shop?search=xiaomi",
-    from: "#1c0505", to: "#7f1d1d",
-    img: "https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=2070&auto=format&fit=crop",
-    accent: "#ef4444"
+    accent: "#c084fc"
   }
 ];
 
-function HeroBanner() {
+function FullWidthHero() {
   const [current, setCurrent] = useState(0);
   const [animating, setAnimating] = useState(false);
   const timeoutRef = useRef(null);
@@ -205,51 +186,36 @@ function HeroBanner() {
   const slide = heroSlides[current];
 
   return (
-    <div className="relative rounded-3xl overflow-hidden mb-4 h-[420px] md:h-[480px] shadow-2xl" style={{ background: `linear-gradient(135deg, ${slide.from}, ${slide.to})` }}>
+    <div className="relative rounded-3xl overflow-hidden mb-8 h-[400px] md:h-[500px] lg:h-[550px] shadow-2xl w-full" style={{ background: `linear-gradient(135deg, ${slide.from}, ${slide.to})` }}>
       {/* Background image */}
-      <div className="absolute inset-0 transition-opacity duration-700"
-        style={{ backgroundImage: `url(${slide.img})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.25 }} />
+      <div className="absolute inset-0 transition-opacity duration-1000"
+        style={{ backgroundImage: `url(${slide.img})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.4 }} />
       
-      {/* Animated gradient overlay */}
-      <div className="absolute inset-0" style={{ background: `linear-gradient(to right, ${slide.from}ee 50%, transparent 100%)` }} />
+      {/* Gradient overlay for text readability */}
+      <div className="absolute inset-0" style={{ background: `linear-gradient(to right, ${slide.from} 10%, ${slide.from}cc 50%, transparent 100%)` }} />
       
-      {/* Decorative circles */}
-      <div className="absolute top-[-80px] right-[-80px] w-96 h-96 rounded-full opacity-10" style={{ background: slide.accent, filter: 'blur(60px)' }} />
-      <div className="absolute bottom-[-60px] right-[20%] w-64 h-64 rounded-full opacity-10" style={{ background: slide.accent, filter: 'blur(40px)' }} />
-
       {/* Content */}
-      <div className={`relative z-10 h-full flex flex-col justify-center px-8 md:px-14 transition-all duration-500 ${animating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
-        <span className={`inline-block px-3 py-1 rounded-full text-[11px] font-black tracking-widest mb-4 w-fit ${slide.tagColor}`}>
+      <div className={`relative z-10 h-full flex flex-col justify-center px-8 md:px-16 lg:px-24 w-full md:w-2/3 transition-all duration-500 ${animating ? 'opacity-0 translate-y-8' : 'opacity-100 translate-y-0'}`}>
+        <span className={`inline-block px-3 py-1 rounded-sm text-xs font-black tracking-widest mb-6 w-fit ${slide.tagColor}`}>
           {slide.tag}
         </span>
-        <h1 className="text-white font-black text-4xl md:text-6xl leading-none mb-1">{slide.title}</h1>
-        <p className="font-medium text-xl md:text-2xl mb-3" style={{ color: slide.accent }}>{slide.sub}</p>
-        <p className="text-white/70 text-sm mb-7 max-w-xs">{slide.desc}</p>
+        <h1 className="text-white font-black text-4xl md:text-5xl lg:text-6xl leading-tight mb-2">{slide.title}</h1>
+        <p className="font-bold text-xl md:text-3xl mb-4" style={{ color: slide.accent }}>{slide.sub}</p>
+        <p className="text-gray-300 text-sm md:text-base mb-8 max-w-md leading-relaxed">{slide.desc}</p>
         <Link to={slide.ctaLink}
-          className="inline-flex items-center gap-2 text-gray-900 font-black px-7 py-3.5 rounded-full w-fit shadow-xl hover:scale-105 transition-transform duration-200"
-          style={{ background: 'white' }}>
-          {slide.cta} <ArrowRight size={17}/>
+          className="inline-flex items-center justify-center gap-2 bg-white text-gray-900 font-black px-8 py-4 rounded-full w-fit shadow-xl hover:scale-105 hover:bg-gray-50 transition-all duration-300">
+          {slide.cta} <ArrowRight size={18}/>
         </Link>
       </div>
 
-      {/* Slide dots */}
-      <div className="absolute bottom-5 left-8 flex gap-2">
+      {/* Slide indicators */}
+      <div className="absolute bottom-6 md:bottom-10 left-8 md:left-16 lg:left-24 flex gap-2 z-20">
         {heroSlides.map((_, i) => (
           <button key={i} onClick={() => goTo(i)}
             className="h-1.5 rounded-full transition-all duration-300"
-            style={{ width: i === current ? 28 : 8, background: i === current ? 'white' : 'rgba(255,255,255,0.35)' }} />
+            style={{ width: i === current ? 32 : 10, background: i === current ? 'white' : 'rgba(255,255,255,0.4)' }} />
         ))}
       </div>
-
-      {/* Arrows */}
-      <button onClick={() => goTo((current - 1 + heroSlides.length) % heroSlides.length)}
-        className="absolute left-4 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/15 backdrop-blur-sm rounded-full text-white flex items-center justify-center hover:bg-white/30 transition">
-        <ChevronLeft size={18}/>
-      </button>
-      <button onClick={() => goTo((current + 1) % heroSlides.length)}
-        className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/15 backdrop-blur-sm rounded-full text-white flex items-center justify-center hover:bg-white/30 transition">
-        <ChevronRight size={18}/>
-      </button>
     </div>
   );
 }
@@ -262,9 +228,7 @@ export default function HomePage() {
   const [brands, setBrands] = useState([]);
   const [latestNews, setLatestNews] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeBrand, setActiveBrand] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  
 
   useEffect(() => {
     (async () => {
@@ -289,108 +253,69 @@ export default function HomePage() {
   }, []);
 
   const LoadingCards = ({ count = 4 }) => (
-    <div className="flex gap-4">
+    <div className="flex gap-5">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="min-w-[220px] h-80 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl animate-pulse flex-shrink-0" />
+        <div key={i} className="min-w-[240px] h-[380px] bg-white rounded-2xl border border-gray-100 animate-pulse flex-shrink-0 p-4 flex flex-col">
+            <div className="w-full h-48 bg-gray-100 rounded-xl mb-4"></div>
+            <div className="w-3/4 h-4 bg-gray-200 rounded mb-2"></div>
+            <div className="w-1/2 h-4 bg-gray-200 rounded mb-auto"></div>
+            <div className="w-1/3 h-6 bg-gray-200 rounded"></div>
+        </div>
       ))}
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#f8f9fa]">
 
-      {/* ── ANNOUNCEMENT BAR ── */}
-      <div className="bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 text-white text-xs font-semibold text-center py-2.5 tracking-wide flex items-center justify-center gap-2">
-        <Gift size={13}/> Miễn phí vận chuyển cho đơn từ 5 triệu — Bảo hành 12 tháng chính hãng
-        <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px] font-black ml-1">MỚI</span>
-      </div>
+      <div className="max-w-[1280px] mx-auto px-4 md:px-6 py-6 md:py-8">
 
-      <div className="max-w-screen-xl mx-auto px-4 md:px-6 py-6">
-
-        {/* ── SEARCH BAR QUICK ACCESS ── */}
+        {/* ── MOBILE SEARCH ── */}
         <div className="relative mb-6 md:hidden">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"/>
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"/>
           <input
-            className="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-blue-400 shadow-sm"
-            placeholder="Tìm kiếm điện thoại, thương hiệu..."
+            className="w-full bg-white border border-gray-200 rounded-xl pl-12 pr-4 py-3.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm"
+            placeholder="Bạn cần tìm điện thoại gì?"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && navigate(`/shop?search=${searchQuery}`)}
           />
         </div>
 
-        {/* ── HERO BANNER + SIDE BANNERS ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
-          <div className="lg:col-span-2">
-            <HeroBanner />
-          </div>
+        {/* ── FULL WIDTH HERO ── */}
+        <FullWidthHero />
 
-          <div className="flex flex-col gap-4">
-            {/* Side banner 1 */}
-            <div className="flex-1 rounded-2xl overflow-hidden relative group cursor-pointer min-h-[140px]" style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}
-              onClick={() => navigate('/shop?search=oppo')}>
-              <div className="absolute inset-0 opacity-20 group-hover:opacity-30 transition bg-[url('https://images.unsplash.com/photo-1574944985070-8f3ebc6b79d2?q=80&w=800')] bg-cover bg-center"/>
-              <div className="relative z-10 p-5 h-full flex flex-col justify-center">
-                <span className="text-purple-200 text-[10px] font-black tracking-widest mb-1">OPPO SERIES</span>
-                <h3 className="text-white font-black text-lg leading-tight mb-1">Find X8 Pro</h3>
-                <p className="text-purple-200 text-xs mb-3">Hasselblad Camera</p>
-                <span className="text-white text-xs font-bold flex items-center gap-1 group-hover:gap-2 transition-all">Xem ngay <ArrowRight size={12}/></span>
-              </div>
-              <div className="absolute bottom-[-20px] right-[-20px] w-28 h-28 rounded-full bg-white/10 group-hover:scale-150 transition-transform duration-700"/>
-            </div>
-
-            {/* Side banner 2 */}
-            <div className="flex-1 rounded-2xl overflow-hidden relative group cursor-pointer min-h-[140px]" style={{ background: 'linear-gradient(135deg, #dc2626, #ea580c)' }}
-              onClick={() => navigate('/shop?search=realme')}>
-              <div className="relative z-10 p-5 h-full flex flex-col justify-center">
-                <span className="bg-white text-red-600 text-[9px] font-black px-2 py-0.5 rounded-full w-fit mb-2">SALE UP TO 40%</span>
-                <h3 className="text-white font-black text-lg leading-tight mb-1">Realme GT 6</h3>
-                <p className="text-red-100 text-xs mb-3">Sạc siêu nhanh 120W</p>
-                <span className="text-white text-xs font-bold flex items-center gap-1 group-hover:gap-2 transition-all">Mua ngay <ArrowRight size={12}/></span>
-              </div>
-              <div className="absolute top-[-30px] right-[-30px] w-32 h-32 rounded-full bg-white/10 group-hover:scale-150 transition-transform duration-700"/>
-            </div>
-          </div>
-        </div>
-
-        {/* ── SERVICE BADGES ── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
+        {/* ── SERVICE TRUST BADGES ── */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-12">
           {[
-            { icon: Truck, label: "Miễn phí vận chuyển", sub: "Đơn từ 5 triệu", color: "bg-blue-500", light: "bg-blue-50 text-blue-700" },
-            { icon: ShieldCheck, label: "Bảo hành chính hãng", sub: "12 tháng", color: "bg-green-500", light: "bg-green-50 text-green-700" },
-            { icon: RefreshCw, label: "Đổi trả 30 ngày", sub: "Lỗi nhà sản xuất", color: "bg-orange-500", light: "bg-orange-50 text-orange-700" },
-            { icon: Headphones, label: "Hỗ trợ 24/7", sub: "Hotline: 1900 xxxx", color: "bg-purple-500", light: "bg-purple-50 text-purple-700" },
-          ].map(({ icon: Icon, label, sub, color, light }, i) => (
-            <div key={i} className={`flex items-center gap-3 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition group cursor-default`}>
-              <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}>
-                <Icon size={18} className="text-white"/>
+            { icon: ShieldCheck, title: "Hàng Chính Hãng", sub: "Cam kết 100%" },
+            { icon: Truck, title: "Giao Nhanh 2H", sub: "Trong nội thành" },
+            { icon: RefreshCw, title: "1 Đổi 1 30 Ngày", sub: "Lỗi nhà sản xuất" },
+            { icon: Headphones, title: "Hỗ Trợ 24/7", sub: "Hotline 1900 xxxx" },
+          ].map(({ icon: Icon, title, sub }, i) => (
+            <div key={i} className="flex items-center gap-3 md:gap-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
+              <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+                <Icon size={24} strokeWidth={1.5}/>
               </div>
               <div>
-                <p className="font-bold text-gray-800 text-xs">{label}</p>
-                <p className="text-gray-400 text-[10px]">{sub}</p>
+                <p className="font-bold text-gray-800 text-sm">{title}</p>
+                <p className="text-gray-500 text-xs hidden md:block mt-0.5">{sub}</p>
               </div>
             </div>
           ))}
         </div>
 
-        {/* ── BRAND FILTER ── */}
-        <div className="mb-10">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-black text-gray-900 flex items-center gap-2">
-              <Award size={20} className="text-amber-500"/> Thương hiệu
-            </h2>
+        {/* ── BRAND QUICK LINKS ── */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-black text-gray-900">Thương hiệu nổi bật</h2>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setActiveBrand("all")}
-              className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 border ${activeBrand === "all" ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200' : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600'}`}>
-              Tất cả
-            </button>
+          <div className="flex flex-wrap gap-3">
             {brands.map(brand => (
               <button
                 key={brand.id}
-                onClick={() => setActiveBrand(brand.id)}
-                className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 border ${activeBrand === brand.id ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200' : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600'}`}>
+                onClick={() => navigate(`/shop?brand=${brand.id}`)}
+                className="px-6 py-3 rounded-xl text-sm font-bold bg-white border border-gray-200 text-gray-700 hover:border-blue-600 hover:text-blue-600 hover:shadow-md transition-all">
                 {brand.name}
               </button>
             ))}
@@ -398,128 +323,104 @@ export default function HomePage() {
         </div>
 
         {/* ── FLASH SALE ── */}
-        <div className="mb-10">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-red-500 flex items-center justify-center">
-                <Zap size={18} className="text-white fill-white"/>
+        <div className="mb-14 bg-gradient-to-br from-red-600 to-orange-500 rounded-3xl p-6 md:p-8 shadow-xl">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-md">
+                <Zap size={24} className="text-white fill-white"/>
               </div>
-              <h2 className="text-xl font-black text-gray-900">Flash Sale</h2>
-              <span className="text-[10px] font-black tracking-wider px-2 py-0.5 rounded-full bg-red-100 text-red-600 animate-pulse">ĐANG DIỄN RA</span>
-              <CountdownTimer targetHours={5}/>
+              <div>
+                <h2 className="text-2xl md:text-3xl font-black text-white flex items-center gap-3">
+                  GIỜ VÀNG GIÁ SỐC
+                </h2>
+                <div className="mt-2"><CountdownTimer targetHours={12}/></div>
+              </div>
             </div>
-            <Link to="/shop?sort=price_asc" className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-0.5">
-              Xem tất cả <ChevronRight size={13}/>
+            <Link to="/shop?sort=price_asc" className="text-sm font-bold text-white bg-white/20 px-6 py-2.5 rounded-full hover:bg-white hover:text-red-600 transition flex items-center gap-1">
+              Xem tất cả <ChevronRight size={16}/>
             </Link>
           </div>
 
           {loading ? <LoadingCards count={4}/> : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
               {hotProducts.slice(0, 4).map(p => (
-                <ProductCard key={p.id} product={p} label="FLASH SALE" labelColor="bg-red-500" badge />
+                <div key={p.id}>
+                    <ProductCard product={p} label="GIẢM SỐC" labelColor="bg-red-500" badge />
+                </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* ── PROMO BANNER STRIP ── */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+        {/* ── PROMO ACTION CARDS ── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-14">
           {[
-            { icon: Percent, label: "Trả góp 0%", sub: "12 tháng, không lãi suất", color: "from-blue-500 to-cyan-500" },
-            { icon: Gift, label: "Tặng quà hấp dẫn", sub: "Kèm tai nghe & ốp lưng", color: "from-purple-500 to-pink-500" },
-            { icon: Bell, label: "Thông báo giảm giá", sub: "Đăng ký nhận ưu đãi", color: "from-amber-500 to-orange-500" },
-          ].map(({ icon: Icon, label, sub, color }, i) => (
-            <div key={i} className={`flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r ${color} text-white shadow-md cursor-pointer hover:scale-[1.02] transition-transform duration-200`}>
-              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                <Icon size={20} className="text-white"/>
+            { icon: Smartphone, title: "Thu cũ đổi mới", sub: "Trợ giá lên đời đến 5 triệu", bg: "bg-blue-600" },
+            { icon: CreditCard, title: "Trả góp 0%", sub: "Duyệt hồ sơ nhanh trong 5 phút", bg: "bg-indigo-600" },
+            { icon: Shield, title: "Bảo hành VIP", sub: "Rơi vỡ, vào nước vẫn đổi mới", bg: "bg-slate-800" },
+          ].map(({ icon: Icon, title, sub, bg }, i) => (
+            <div key={i} className={`flex items-center gap-5 p-6 rounded-2xl ${bg} text-white shadow-lg hover:-translate-y-1 transition-transform cursor-pointer`}>
+              <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center shrink-0 border border-white/20">
+                <Icon size={28} className="text-white"/>
               </div>
               <div>
-                <p className="font-black text-sm">{label}</p>
-                <p className="text-white/80 text-xs">{sub}</p>
+                <p className="font-black text-lg mb-1">{title}</p>
+                <p className="text-white/80 text-sm font-medium">{sub}</p>
               </div>
             </div>
           ))}
         </div>
 
-        {/* ── QUICK NAV CARDS ── */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-          {[
-            { to: "/shop", icon: Store, label: "Cửa hàng", desc: "Xem tất cả sản phẩm", accent: "blue" },
-            { to: "/about", icon: Info, label: "Về chúng tôi", desc: "Câu chuyện thương hiệu", accent: "green" },
-            { to: "/contact", icon: Phone, label: "Liên hệ", desc: "Hỗ trợ 24/7", accent: "purple" },
-          ].map(({ to, icon: Icon, label, desc, accent }, i) => (
-            <Link key={i} to={to}
-              className={`flex items-center gap-4 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:border-${accent}-200 transition group`}>
-              <div className={`w-11 h-11 rounded-xl bg-${accent}-50 text-${accent}-600 flex items-center justify-center group-hover:bg-${accent}-600 group-hover:text-white transition-all duration-300`}>
-                <Icon size={22}/>
-              </div>
-              <div>
-                <h3 className={`font-black text-gray-800 group-hover:text-${accent}-600 transition text-sm`}>{label}</h3>
-                <p className="text-gray-400 text-xs">{desc}</p>
-              </div>
-              <ChevronRight size={15} className={`ml-auto text-gray-300 group-hover:text-${accent}-500 transition`}/>
-            </Link>
-          ))}
-        </div>
-
         {/* ── NEW ARRIVALS ── */}
-        <ScrollSection title="Sản phẩm mới về" icon={Sparkles} iconColor="bg-blue-500" link="/shop?sort=newest" linkText="Xem tất cả" badge="NEW">
-          {loading
-            ? Array.from({ length: 5 }).map((_, i) => <div key={i} className="min-w-[220px] h-80 bg-gray-100 rounded-2xl animate-pulse flex-shrink-0"/>)
-            : newProducts.map(p => (
-              <div key={p.id} className="min-w-[220px] max-w-[220px] flex-shrink-0">
-                <ProductCard product={p} label="NEW" labelColor="bg-blue-500" badge/>
+        <ScrollSection title="Điện thoại Mới Nhất" icon={Tag} iconColor="bg-emerald-500" link="/shop?sort=newest" linkText="Xem tất cả">
+          {loading ? <LoadingCards count={5}/> : newProducts.map(p => (
+              <div key={p.id} className="min-w-[240px] max-w-[240px] flex-shrink-0">
+                <ProductCard product={p} label="MỚI" labelColor="bg-emerald-500" badge/>
               </div>
             ))}
         </ScrollSection>
 
-        {/* ── HOT DEALS ── */}
-        <ScrollSection title="Giá Tốt Hôm Nay" icon={TrendingUp} iconColor="bg-red-500" link="/shop?sort=price_asc" linkText="Xem tất cả" badge="HOT">
-          {loading
-            ? Array.from({ length: 5 }).map((_, i) => <div key={i} className="min-w-[220px] h-80 bg-gray-100 rounded-2xl animate-pulse flex-shrink-0"/>)
-            : hotProducts.map(p => (
-              <div key={p.id} className="min-w-[220px] max-w-[220px] flex-shrink-0">
-                <ProductCard product={p} label="GIÁ TỐT" labelColor="bg-red-500" badge/>
+        {/* ── BEST SELLERS ── */}
+        <ScrollSection title="Bán chạy trong tuần" icon={TrendingUp} iconColor="bg-orange-500" link="/shop?sort=price_asc" linkText="Xem tất cả">
+          {loading ? <LoadingCards count={5}/> : hotProducts.map(p => (
+              <div key={p.id} className="min-w-[240px] max-w-[240px] flex-shrink-0">
+                <ProductCard product={p} label="HOT" labelColor="bg-orange-500" badge/>
               </div>
             ))}
         </ScrollSection>
 
-        {/* ── BIG PROMO BANNER ── */}
-        <div className="relative rounded-3xl overflow-hidden mb-10 h-64 md:h-72 group cursor-pointer" onClick={() => navigate('/shop')}
-          style={{ background: 'linear-gradient(120deg, #0f172a 0%, #1e3a8a 60%, #1d4ed8 100%)' }}>
-          <div className="absolute inset-0 bg-[url('https://plus.unsplash.com/premium_photo-1680985551009-05107cd2752c?q=80&w=1632&auto=format&fit=crop')] bg-cover bg-center opacity-20 group-hover:scale-105 transition-transform duration-1000"/>
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(15,23,42,0.95) 50%, transparent)' }}/>
-          
-          {/* Glow effects */}
-          <div className="absolute top-[-50px] right-[30%] w-80 h-80 rounded-full opacity-20 blur-3xl" style={{ background: '#3b82f6' }}/>
-          
-          <div className="relative z-10 h-full flex flex-col justify-center px-8 md:px-14">
-            <span className="text-blue-400 font-black tracking-[0.2em] text-xs mb-3 block">LIMITED TIME OFFER</span>
-            <h2 className="text-white font-black text-3xl md:text-5xl leading-tight mb-3">
-              Nâng cấp dế yêu<br/>
-              <span className="text-yellow-400">Tiết kiệm đến 50%</span>
+        {/* ── MID-PAGE BANNER (Ecosystem) ── */}
+        <div className="relative rounded-3xl overflow-hidden mb-14 h-48 md:h-64 shadow-xl cursor-pointer" onClick={() => navigate('/shop')}>
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1603898037225-83130b91d293?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-90 transition-transform duration-1000 hover:scale-105"/>
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent"/>
+          <div className="relative z-10 h-full flex flex-col justify-center px-8 md:px-16">
+            <span className="text-blue-400 font-black tracking-widest text-xs mb-2">HỆ SINH THÁI ĐỈNH CAO</span>
+            <h2 className="text-white font-black text-3xl md:text-4xl mb-4">
+              Apple Ecosystem
             </h2>
-            <p className="text-white/60 text-sm mb-6 max-w-sm">Hàng nghìn sản phẩm giảm giá sốc — Chỉ trong thời gian có hạn</p>
-            <button className="inline-flex items-center gap-2 bg-white text-gray-900 font-black px-8 py-3 rounded-full w-fit hover:bg-yellow-400 transition-colors duration-300 shadow-xl">
-              Săn Deal Ngay <ArrowRight size={16}/>
+            <button className="inline-flex items-center gap-2 bg-white text-gray-900 font-black px-6 py-2.5 rounded-full w-fit hover:bg-gray-100 transition-colors">
+              Khám phá ngay <ArrowRight size={16}/>
             </button>
           </div>
         </div>
 
-        {/* ── LATEST NEWS (TIN TỨC CÔNG NGHỆ) ── */}
-        <div className="mb-14">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-black text-gray-900 flex items-center gap-2">
-              <Newspaper size={24} className="text-blue-600"/> Tin tức công nghệ
-            </h2>
-            <Link to="/news" className="text-sm font-bold text-blue-600 hover:underline flex items-center gap-1">
-              Xem tất cả <ChevronRight size={16}/>
+        {/* ── TECH NEWS ── */}
+        <div className="mb-10">
+          <div className="flex items-end justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-cyan-500 flex items-center justify-center shadow-sm">
+                <Newspaper size={20} className="text-white"/>
+              </div>
+              <h2 className="text-2xl font-black text-gray-900">Tin tức công nghệ 24h</h2>
+            </div>
+            <Link to="/news" className="text-sm font-bold text-blue-600 hover:underline flex items-center gap-1 hidden md:flex">
+              Tất cả bài viết <ChevronRight size={16}/>
             </Link>
           </div>
 
           {loading ? (
              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[1, 2, 3].map(i => <div key={i} className="h-80 bg-gray-200 animate-pulse rounded-2xl"></div>)}
+                {[1, 2, 3].map(i => <div key={i} className="h-[380px] bg-white rounded-2xl border border-gray-100 animate-pulse"></div>)}
              </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -530,24 +431,13 @@ export default function HomePage() {
               ))}
             </div>
           )}
+          <div className="mt-6 text-center md:hidden">
+            <Link to="/news" className="inline-flex items-center justify-center w-full px-6 py-3 bg-white border border-gray-200 rounded-xl font-bold text-gray-700">
+               Xem thêm tin tức
+            </Link>
+          </div>
         </div>
 
-        {/* ── FOOTER TRUST BADGES ── */}
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-6">
-          {[
-            { icon: ShieldCheck, label: "Hàng chính hãng" },
-            { icon: Truck, label: "Giao nhanh 2h" },
-            { icon: RefreshCw, label: "Đổi trả dễ dàng" },
-            { icon: Award, label: "Uy tín #1" },
-            { icon: Tag, label: "Giá cạnh tranh" },
-            { icon: Headphones, label: "CSKH 24/7" },
-          ].map(({ icon: Icon, label }, i) => (
-            <div key={i} className="flex flex-col items-center gap-2 p-3 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition text-center cursor-default">
-              <Icon size={20} className="text-blue-600"/>
-              <p className="text-[10px] font-bold text-gray-600">{label}</p>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );

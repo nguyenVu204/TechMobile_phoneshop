@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  FileText
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import axiosClient from "../api/axiosClient";
@@ -318,12 +319,18 @@ export default function OrderHistoryPage() {
                   {translateStatus(selectedOrder.status)}
                 </span>
               </div>
-              <button
-                onClick={() => setSelectedOrder(null)}
-                className="p-2 hover:bg-gray-200 rounded-full transition"
-              >
-                <X size={20} />
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => navigate(`/my-orders/${selectedOrder.id}/invoice`)}
+                  className="flex items-center gap-2 bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-700 transition shadow-sm"
+                >
+                  <FileText size={16} />
+                  Xem Hóa đơn
+                </button>
+                <button onClick={() => setSelectedOrder(null)} className="p-2 hover:bg-gray-200 rounded-full transition">
+                  <X size={20} />
+                </button>
+              </div>
             </div>
 
             <div className="p-6 overflow-y-auto">

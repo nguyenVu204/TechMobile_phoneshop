@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { 
   DollarSign, ShoppingBag, Package, Calendar, Download, 
-  CreditCard, TrendingUp, Users 
+  CreditCard, TrendingUp, Filter 
 } from 'lucide-react';
 import { 
-  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
+  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend 
 } from 'recharts';
 import axiosClient from '../../api/axiosClient';
@@ -12,13 +12,12 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import toast from 'react-hot-toast';
 
-// Màu sắc cho biểu đồ tròn
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 const STATUS_COLORS = {
-  'Pending': '#EAB308',   // Yellow
-  'Shipping': '#3B82F6',  // Blue
-  'Completed': '#22C55E', // Green
-  'Cancelled': '#EF4444'  // Red
+  'Pending': '#EAB308',   
+  'Shipping': '#3B82F6',  
+  'Completed': '#22C55E', 
+  'Cancelled': '#EF4444'  
 };
 
 export default function Dashboard() {
@@ -34,17 +33,46 @@ export default function Dashboard() {
     recentOrders: []
   });
   
-  const [timeframe, setTimeframe] = useState('week');
+  // --- STATE BỘ LỌC THỜI GIAN ---
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
+
+  const [filterType, setFilterType] = useState('week'); // week, this_month, specific_month, year, custom
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  
+  const [dateInfo, setDateInfo] = useState("7 ngày qua");
   const [isExporting, setIsExporting] = useState(false);
+
+  // Sinh mảng năm (Ví dụ: từ 2023 đến năm hiện tại + 1)
+  const years = Array.from({length: 5}, (_, i) => currentYear - 2 + i).sort((a,b)=>b-a);
 
   useEffect(() => {
     fetchStats();
-  }, [timeframe]);
+  }, [filterType, selectedMonth, selectedYear, startDate, endDate]);
 
   const fetchStats = async () => {
     try {
-        const res = await axiosClient.get(`/stats?timeframe=${timeframe}`);
+        let url = `/stats?timeframe=${filterType === 'this_month' ? 'month' : filterType}`;
+        
+        if (filterType === 'specific_month') {
+            url = `/stats?timeframe=month&month=${selectedMonth}&year=${selectedYear}`;
+        } else if (filterType === 'year') {
+            url = `/stats?timeframe=year&year=${selectedYear}`;
+        } else if (filterType === 'custom') {
+            if (!startDate || !endDate) return; // Đợi nhập đủ từ ngày - đến ngày
+            url = `/stats?timeframe=custom&startDate=${startDate}&endDate=${endDate}`;
+        }
+
+        const res = await axiosClient.get(url);
         setData(res.data);
+        
+        // Cập nhật text hiển thị thời gian
+        if(res.data.timeRange) {
+            setDateInfo(`Dữ liệu từ ${res.data.timeRange.from} đến ${res.data.timeRange.to}`);
+        }
     } catch (error) {
         console.error("Lỗi tải thống kê:", error);
     }
@@ -60,7 +88,7 @@ export default function Dashboard() {
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
         pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
-        pdf.save(`Bao-cao-${new Date().toISOString().split('T')[0]}.pdf`);
+        pdf.save(`Bao-cao-doanh-thu.pdf`);
         toast.success("Xuất PDF thành công!");
     } catch (error) {
         toast.error("Lỗi xuất PDF");
@@ -69,7 +97,6 @@ export default function Dashboard() {
     }
   };
 
-  // Component Thẻ KPI
   const KpiCard = ({ title, value, subValue, icon: Icon, color }) => (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition">
       <div>
@@ -85,26 +112,89 @@ export default function Dashboard() {
 
   return (
     <div>
-      {/* HEADER */}
-      <div className="mb-8 flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
+      {/* HEADER & FILTERS */}
+      <div className="mb-8 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
         <div>
             <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
-            <p className="text-slate-500 text-sm">Tổng quan tình hình kinh doanh của cửa hàng.</p>
+            {/* Hiển thị dòng text xác nhận thời gian đang lọc */}
+            <p className="text-blue-600 text-sm font-semibold mt-1 flex items-center gap-1">
+                <Filter size={14}/> {dateInfo}
+            </p>
         </div>
-        <div className="flex gap-3">
+        
+        <div className="flex flex-wrap gap-3 items-center">
+            
+            {/* 1. Chọn loại lọc */}
             <div className="bg-white border border-gray-200 rounded-lg p-1 flex items-center shadow-sm h-10">
                 <div className="px-3 text-gray-400"><Calendar size={16} /></div>
                 <select 
-                    value={timeframe}
-                    onChange={(e) => setTimeframe(e.target.value)}
+                    value={filterType}
+                    onChange={(e) => setFilterType(e.target.value)}
                     className="bg-transparent border-none text-sm font-semibold text-gray-700 focus:ring-0 cursor-pointer py-1 pr-8 outline-none"
                 >
                     <option value="week">7 ngày qua</option>
-                    <option value="month">Tháng này</option>
-                    <option value="year">Năm nay</option>
+                    <option value="this_month">Tháng này</option>
+                    <option value="specific_month">Tháng cụ thể</option>
+                    <option value="year">Nguyên năm</option>
+                    <option value="custom">Tùy chọn khoảng ngày</option>
                 </select>
             </div>
-            <button onClick={handleExportPDF} disabled={isExporting} className="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-900 transition flex items-center gap-2 h-10">
+
+            {/* 2. Lọc tháng cụ thể */}
+            {filterType === 'specific_month' && (
+                <div className="flex gap-2 h-10 animate-in fade-in slide-in-from-left-2">
+                    <select 
+                        value={selectedMonth} 
+                        onChange={(e) => setSelectedMonth(e.target.value)}
+                        className="bg-white border border-gray-200 text-sm font-semibold text-gray-700 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-3 outline-none shadow-sm cursor-pointer"
+                    >
+                        {Array.from({length: 12}, (_, i) => i + 1).map(m => (
+                            <option key={m} value={m}>Tháng {m}</option>
+                        ))}
+                    </select>
+                    <select 
+                        value={selectedYear} 
+                        onChange={(e) => setSelectedYear(e.target.value)}
+                        className="bg-white border border-gray-200 text-sm font-semibold text-gray-700 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-3 outline-none shadow-sm cursor-pointer"
+                    >
+                        {years.map(y => <option key={y} value={y}>Năm {y}</option>)}
+                    </select>
+                </div>
+            )}
+
+            {/* 3. Lọc theo năm */}
+            {filterType === 'year' && (
+                <div className="flex gap-2 h-10 animate-in fade-in slide-in-from-left-2">
+                    <select 
+                        value={selectedYear} 
+                        onChange={(e) => setSelectedYear(e.target.value)}
+                        className="bg-white border border-gray-200 text-sm font-semibold text-gray-700 focus:ring-2 focus:ring-blue-500/20 rounded-lg px-3 outline-none shadow-sm cursor-pointer"
+                    >
+                        {years.map(y => <option key={y} value={y}>Năm {y}</option>)}
+                    </select>
+                </div>
+            )}
+
+            {/* 4. Lọc tùy chọn (Từ ngày - Đến ngày) */}
+            {filterType === 'custom' && (
+                <div className="flex items-center gap-2 h-10 bg-white border border-gray-200 rounded-lg px-3 shadow-sm animate-in fade-in slide-in-from-left-2">
+                    <input 
+                        type="date" 
+                        value={startDate} 
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="text-sm font-semibold text-gray-700 focus:outline-none bg-transparent"
+                    />
+                    <span className="text-gray-400 font-medium text-xs">đến</span>
+                    <input 
+                        type="date" 
+                        value={endDate} 
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="text-sm font-semibold text-gray-700 focus:outline-none bg-transparent"
+                    />
+                </div>
+            )}
+
+            <button onClick={handleExportPDF} disabled={isExporting} className="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-900 transition flex items-center gap-2 h-10 ml-auto">
                 {isExporting ? "Đang tạo..." : <><Download size={16} /> Xuất PDF</>}
             </button>
         </div>
@@ -113,33 +203,16 @@ export default function Dashboard() {
       {/* --- KHU VỰC IN PDF --- */}
       <div id="dashboard-content" className="space-y-6 bg-gray-50 p-4 rounded-xl"> 
         
-        {/* 1. KPI CARDS */}
+        {/* KPI CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <KpiCard 
-                title="Doanh thu" 
-                value={`${data.totalRevenue.toLocaleString('vi-VN')} ₫`} 
-                icon={DollarSign} color="bg-blue-500" 
-            />
-            <KpiCard 
-                title="Tổng đơn hàng" 
-                value={data.totalOrders} 
-                icon={ShoppingBag} color="bg-orange-500" 
-            />
-            <KpiCard 
-                title="Giá trị TB/Đơn (AOV)" 
-                value={`${data.aov.toLocaleString('vi-VN')} ₫`} 
-                icon={CreditCard} color="bg-green-500" 
-            />
-            <KpiCard 
-                title="Tổng tồn kho" 
-                value={data.totalProducts} 
-                icon={Package} color="bg-purple-500" 
-            />
+            <KpiCard title="Doanh thu" value={`${data.totalRevenue.toLocaleString('vi-VN')} ₫`} icon={DollarSign} color="bg-blue-500" />
+            <KpiCard title="Tổng đơn hàng" value={data.totalOrders} icon={ShoppingBag} color="bg-orange-500" />
+            <KpiCard title="Giá trị TB/Đơn" value={`${data.aov.toLocaleString('vi-VN')} ₫`} icon={CreditCard} color="bg-green-500" />
+            <KpiCard title="Tồn kho hiện tại" value={data.totalProducts} icon={Package} color="bg-purple-500" />
         </div>
 
-        {/* 2. HÀNG 2: BIỂU ĐỒ DOANH THU & TRẠNG THÁI ĐƠN */}
+        {/* BIỂU ĐỒ DOANH THU & TRẠNG THÁI ĐƠN */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Chart Doanh thu (Chiếm 2/3) */}
             <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <h3 className="font-bold text-gray-800 mb-6 flex items-center gap-2">
                     <TrendingUp size={20} className="text-blue-500"/> Biểu đồ Doanh thu & Đơn hàng
@@ -166,7 +239,6 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Chart Trạng thái đơn (Chiếm 1/3) */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <h3 className="font-bold text-gray-800 mb-6 text-center">Trạng thái đơn hàng</h3>
                 <div className="h-[300px]">
@@ -192,11 +264,10 @@ export default function Dashboard() {
             </div>
         </div>
 
-        {/* 3. HÀNG 3: TOP SẢN PHẨM & DOANH THU THEO HÃNG */}
+        {/* TOP SẢN PHẨM & DOANH THU THEO HÃNG */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Top Sản phẩm */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                <h3 className="font-bold text-gray-800 mb-6">Top 5 Sản phẩm bán chạy</h3>
+                <h3 className="font-bold text-gray-800 mb-6">Top 5 Sản phẩm bán chạy nhất</h3>
                 <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart layout="vertical" data={data.topProducts} margin={{left: 20}}>
@@ -214,7 +285,6 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Doanh thu theo hãng */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                 <h3 className="font-bold text-gray-800 mb-6">Tỷ trọng doanh thu theo Hãng</h3>
                 <div className="h-[300px]">
@@ -239,11 +309,10 @@ export default function Dashboard() {
             </div>
         </div>
 
-        {/* 4. HÀNG 4: ĐƠN HÀNG GẦN ĐÂY */}
+        {/* ĐƠN HÀNG GẦN ĐÂY */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                <h3 className="font-bold text-gray-800">Đơn hàng vừa đặt</h3>
-                <button className="text-blue-600 text-sm font-bold hover:underline">Xem tất cả</button>
+                <h3 className="font-bold text-gray-800">Các đơn hàng phát sinh trong khoảng thời gian này</h3>
             </div>
             <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
@@ -257,7 +326,9 @@ export default function Dashboard() {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                        {data.recentOrders.map((order) => (
+                        {data.recentOrders.length === 0 ? (
+                             <tr><td colSpan="5" className="p-8 text-center text-gray-400">Không có đơn hàng nào trong khoảng thời gian này</td></tr>
+                        ) : data.recentOrders.map((order) => (
                             <tr key={order.id} className="hover:bg-gray-50 transition">
                                 <td className="p-4 font-bold text-gray-700">#{order.id}</td>
                                 <td className="p-4">{order.customerName}</td>

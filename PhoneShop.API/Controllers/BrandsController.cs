@@ -24,6 +24,59 @@ namespace PhoneShop.API.Controllers
             return await _context.Brands.ToListAsync();
         }
 
+        // ========================================================
+        // TÍNH NĂNG MỚI: LẤY CHI TIẾT SẢN PHẨM & LỊCH SỬ XUẤT CỦA HÃNG
+        // GET: api/brands/{id}/products
+        // ========================================================
+        [HttpGet("{id}/products")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetBrandProducts(int id)
+        {
+            var brand = await _context.Brands.FindAsync(id);
+            if (brand == null) return NotFound();
+
+            var products = await _context.Products
+                .Where(p => p.BrandId == id)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Name,
+                    p.Thumbnail,
+                    TotalStock = p.Variants.Sum(v => v.StockQuantity),
+                    TotalSold = _context.OrderDetails
+                                    .Where(od => od.ProductVariant.ProductId == p.Id && od.Order.Status != "Cancelled")
+                                    .Sum(od => (int?)od.Quantity) ?? 0,
+
+                    // 1. THÊM MỚI: Lấy danh sách các biến thể (Màu sắc, RAM, ROM, Giá...)
+                    Variants = p.Variants.Select(v => new {
+                        v.Id,
+                        v.Color,
+                        v.Ram,
+                        v.Rom,
+                        v.Price,
+                        v.StockQuantity,
+                        v.ImageUrl
+                    }).ToList(),
+
+                    // 2. Lịch sử xuất bán (Kèm theo thông tin màu/rom đã bán)
+                    ExportHistory = _context.OrderDetails
+                        .Where(od => od.ProductVariant.ProductId == p.Id && od.Order.Status != "Cancelled")
+                        .OrderByDescending(od => od.Order.OrderDate)
+                        .Select(od => new {
+                            Date = od.Order.OrderDate.ToString("dd/MM/yyyy HH:mm"),
+                            Quantity = od.Quantity,
+                            CustomerName = od.Order.CustomerName,
+                            VariantInfo = od.ProductVariant.Color + " - " + od.ProductVariant.Rom, // Hiện rõ khách mua màu gì
+                            SerialNumbers = od.SerialNumber
+                        })
+                        .Take(15)
+                        .ToList()
+                })
+                .ToListAsync();
+
+            return Ok(new { BrandName = brand.Name, Products = products });
+        }
+
         // POST: api/brands (Thêm mới)
         [HttpPost]
         [Authorize(Roles = "Admin")]

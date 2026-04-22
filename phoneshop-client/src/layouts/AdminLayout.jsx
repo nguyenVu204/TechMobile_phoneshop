@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingBag, Users, LogOut, Menu, X, Tag, Newspaper } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Users, LogOut, Menu, X, Tag, Newspaper, Archive } from 'lucide-react';
 import useAuthStore from '../stores/useAuthStore';
 
 export default function AdminLayout() {
@@ -18,6 +18,7 @@ export default function AdminLayout() {
     { name: 'Sản phẩm', path: '/admin/products', icon: <Package size={20} /> },
     { name: 'Quản lý Hãng', path: '/admin/brands', icon: <Tag size={20} /> },
     { name: 'Đơn hàng', path: '/admin/orders', icon: <ShoppingBag size={20} /> },
+    { name: 'Tồn kho', path: '/admin/inventory', icon: <Archive size={20} /> },
     { name: 'Người dùng', path: '/admin/users', icon: <Users size={20} /> },
     { name: 'Tin tức', path: '/admin/news', icon: <Newspaper size={20} /> },
   ];

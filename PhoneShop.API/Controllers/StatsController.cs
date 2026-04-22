@@ -18,115 +18,113 @@ namespace PhoneShop.API.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetDashboardStats([FromQuery] string timeframe = "week")
+        public async Task<IActionResult> GetDashboardStats(
+            [FromQuery] string timeframe = "week",
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null,
+            [FromQuery] int? month = null,
+            [FromQuery] int? year = null)
         {
-            // 1. KPI TỔNG QUAN
-            var totalRevenue = await _context.Orders
-                .Where(o => o.Status != "Cancelled")
-                .SumAsync(o => o.TotalAmount);
-
-            var totalOrders = await _context.Orders.CountAsync();
-            var totalProducts = await _context.ProductVariants.SumAsync(v => v.StockQuantity); // Tổng tồn kho
-
-            // Giá trị đơn hàng trung bình (AOV)
-            var aov = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-
-            // 2. BIỂU ĐỒ DOANH THU & ĐƠN HÀNG (Line Chart)
             var today = DateTime.Today;
-            DateTime fromDate;
-            int daysCount;
+            DateTime fromDate = today.AddDays(-6);
+            DateTime toDate = today;
+            bool groupByMonth = false;
 
+            // --- XỬ LÝ LOGIC NGÀY THÁNG ---
             if (timeframe == "month")
             {
-                fromDate = new DateTime(today.Year, today.Month, 1);
-                daysCount = DateTime.DaysInMonth(today.Year, today.Month);
+                int y = year ?? today.Year;
+                int m = month ?? today.Month;
+                fromDate = new DateTime(y, m, 1);
+                toDate = fromDate.AddMonths(1).AddDays(-1);
             }
             else if (timeframe == "year")
             {
-                fromDate = new DateTime(today.Year, 1, 1);
-                daysCount = 12; // Dùng logic riêng cho năm
+                int y = year ?? today.Year;
+                fromDate = new DateTime(y, 1, 1);
+                toDate = new DateTime(y, 12, 31);
+                groupByMonth = true;
             }
-            else // "week"
+            else if (timeframe == "custom")
             {
-                fromDate = today.AddDays(-6);
-                daysCount = 7;
+                fromDate = startDate?.Date ?? today.AddDays(-6);
+                toDate = endDate?.Date ?? today;
+
+                // Nếu khoảng thời gian lớn hơn 60 ngày thì nhóm theo tháng cho biểu đồ đỡ rối
+                if ((toDate - fromDate).TotalDays > 60) groupByMonth = true;
             }
 
+            // --- TRUY VẤN CƠ BẢN THEO THỜI GIAN ---
+            var orderQuery = _context.Orders
+                .Where(o => o.OrderDate >= fromDate && o.OrderDate <= toDate.AddDays(1).AddTicks(-1));
+
+            var querySuccess = orderQuery.Where(o => o.Status != "Cancelled");
+
+            // 1. KPI TỔNG QUAN (Lọc theo khoảng thời gian)
+            var totalRevenue = await querySuccess.SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+            var totalOrders = await orderQuery.CountAsync();
+            var totalProducts = await _context.ProductVariants.SumAsync(v => (int?)v.StockQuantity) ?? 0; // Tồn kho giữ nguyên
+            var aov = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+            // 2. BIỂU ĐỒ DOANH THU
             var revenueData = new List<object>();
 
-            if (timeframe == "year")
+            if (groupByMonth)
             {
-                var rawData = await _context.Orders
-                    .Where(o => o.OrderDate.Year == today.Year && o.Status != "Cancelled")
-                    .GroupBy(o => o.OrderDate.Month)
-                    .Select(g => new { Month = g.Key, Revenue = g.Sum(o => o.TotalAmount), Orders = g.Count() })
+                var rawData = await querySuccess
+                    .GroupBy(o => new { o.OrderDate.Year, o.OrderDate.Month })
+                    .Select(g => new { g.Key.Year, g.Key.Month, Revenue = g.Sum(o => o.TotalAmount), Orders = g.Count() })
                     .ToListAsync();
 
-                for (int i = 1; i <= 12; i++)
+                var iterDate = new DateTime(fromDate.Year, fromDate.Month, 1);
+                while (iterDate <= toDate)
                 {
-                    var data = rawData.FirstOrDefault(r => r.Month == i);
-                    revenueData.Add(new
-                    {
-                        Date = $"T{i}",
-                        Revenue = data?.Revenue ?? 0,
-                        Orders = data?.Orders ?? 0
-                    });
+                    var data = rawData.FirstOrDefault(r => r.Year == iterDate.Year && r.Month == iterDate.Month);
+                    revenueData.Add(new { Date = $"T{iterDate.Month}/{iterDate.Year}", Revenue = data?.Revenue ?? 0, Orders = data?.Orders ?? 0 });
+                    iterDate = iterDate.AddMonths(1);
                 }
             }
             else
             {
-                var rawData = await _context.Orders
-                    .Where(o => o.OrderDate >= fromDate && o.OrderDate <= today.AddDays(1) && o.Status != "Cancelled")
+                var rawData = await querySuccess
                     .GroupBy(o => o.OrderDate.Date)
                     .Select(g => new { Date = g.Key, Revenue = g.Sum(o => o.TotalAmount), Orders = g.Count() })
                     .ToListAsync();
 
-                int loopLimit = (timeframe == "month") ? daysCount : 7;
-                for (int i = 0; i < loopLimit; i++)
+                for (var d = fromDate.Date; d <= toDate.Date; d = d.AddDays(1))
                 {
-                    DateTime date;
-                    if (timeframe == "month") date = new DateTime(today.Year, today.Month, 1).AddDays(i);
-                    else date = fromDate.AddDays(i);
-
-                    if (date > today && timeframe == "month") break;
-
-                    var data = rawData.FirstOrDefault(r => r.Date == date);
-                    revenueData.Add(new
-                    {
-                        Date = date.ToString("dd/MM"),
-                        Revenue = data?.Revenue ?? 0,
-                        Orders = data?.Orders ?? 0
-                    });
+                    var data = rawData.FirstOrDefault(r => r.Date == d);
+                    revenueData.Add(new { Date = d.ToString("dd/MM"), Revenue = data?.Revenue ?? 0, Orders = data?.Orders ?? 0 });
                 }
             }
 
-            // 3. TOP SẢN PHẨM BÁN CHẠY (Bar Chart)
+            // 3. TOP SẢN PHẨM BÁN CHẠY
             var topProducts = await _context.OrderDetails
                 .Include(od => od.ProductVariant).ThenInclude(v => v.Product)
-                .Where(od => od.Order.Status != "Cancelled")
+                .Where(od => od.Order.Status != "Cancelled" && od.Order.OrderDate >= fromDate && od.Order.OrderDate <= toDate.AddDays(1).AddTicks(-1))
                 .GroupBy(od => od.ProductVariant.Product.Name)
                 .Select(g => new { Name = g.Key, Value = g.Sum(x => x.Quantity) })
                 .OrderByDescending(x => x.Value)
                 .Take(5)
                 .ToListAsync();
 
-            // 4. DOANH THU THEO HÃNG (Pie Chart)
+            // 4. DOANH THU THEO HÃNG
             var brandStats = await _context.OrderDetails
                 .Include(od => od.ProductVariant).ThenInclude(v => v.Product).ThenInclude(p => p.Brand)
-                .Where(od => od.Order.Status != "Cancelled")
+                .Where(od => od.Order.Status != "Cancelled" && od.Order.OrderDate >= fromDate && od.Order.OrderDate <= toDate.AddDays(1).AddTicks(-1))
                 .GroupBy(od => od.ProductVariant.Product.Brand.Name)
                 .Select(g => new { Name = g.Key, Value = g.Sum(x => x.Quantity * x.UnitPrice) })
                 .OrderByDescending(x => x.Value)
                 .ToListAsync();
 
-            // 5. TRẠNG THÁI ĐƠN HÀNG (Donut Chart)
-            var orderStatus = await _context.Orders
+            // 5. TRẠNG THÁI ĐƠN HÀNG
+            var orderStatus = await orderQuery
                 .GroupBy(o => o.Status)
                 .Select(g => new { Name = g.Key, Value = g.Count() })
                 .ToListAsync();
 
-            // 6. ĐƠN HÀNG GẦN ĐÂY (Table)
-            var recentOrders = await _context.Orders
+            // 6. ĐƠN HÀNG TRONG KHOẢNG THỜI GIAN
+            var recentOrders = await orderQuery
                 .OrderByDescending(o => o.OrderDate)
                 .Take(5)
                 .Select(o => new {
@@ -134,7 +132,7 @@ namespace PhoneShop.API.Controllers
                     o.CustomerName,
                     o.TotalAmount,
                     o.Status,
-                    Date = o.OrderDate.ToString("dd/MM/yyyy")
+                    Date = o.OrderDate.ToString("dd/MM/yyyy HH:mm")
                 })
                 .ToListAsync();
 
@@ -142,13 +140,14 @@ namespace PhoneShop.API.Controllers
             {
                 TotalRevenue = totalRevenue,
                 TotalOrders = totalOrders,
-                TotalProducts = totalProducts, // Tổng tồn kho
-                AOV = aov, // Giá trị đơn trung bình
-                RevenueData = revenueData, // Line Chart
-                TopProducts = topProducts, // Bar Chart
-                BrandStats = brandStats, // Pie Chart
-                OrderStatus = orderStatus, // Donut Chart
-                RecentOrders = recentOrders // Table
+                TotalProducts = totalProducts,
+                AOV = aov,
+                RevenueData = revenueData,
+                TopProducts = topProducts,
+                BrandStats = brandStats,
+                OrderStatus = orderStatus,
+                RecentOrders = recentOrders,
+                TimeRange = new { From = fromDate.ToString("dd/MM/yyyy"), To = toDate.ToString("dd/MM/yyyy") } // Trả về text thời gian hiển thị
             });
         }
     }

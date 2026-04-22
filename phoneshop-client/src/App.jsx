@@ -34,6 +34,8 @@ import NewsPage from './pages/NewsPage';
 import NewsDetail from './pages/NewsDetail';
 import NewsCategoryManager from "./pages/admin/NewsCategoryManager";
 import ConfirmEmail from "./pages/ConfirmEmail";
+import ChatBox from "./components/ChatBox";
+import InventoryManager from "./pages/admin/InventoryManager";
 
 function App() {
   const { user } = useAuthStore();
@@ -48,7 +50,8 @@ function App() {
     <BrowserRouter>
       <Toaster position="top-center" reverseOrder={false} />
       <Routes>
-        {/* --- NHÓM 1: TRANG KHÁCH HÀNG (Có Header) --- */}
+
+        {/* User */}
         <Route
           element={
             <div className="min-h-screen bg-gray-50">
@@ -57,6 +60,7 @@ function App() {
                 <Outlet />
               </main>
               <Footer />
+              <ChatBox />
             </div>
           }
         >
@@ -93,7 +97,9 @@ function App() {
           />
         </Route>
 
-        {/* --- NHÓM 2: TRANG ADMIN  --- */}
+        <Route path="/my-orders/:id/invoice" element={<InvoicePage />} />
+
+        {/* Admin */}
         <Route element={<AdminRoute />}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />{" "}
@@ -108,6 +114,7 @@ function App() {
             <Route path="news/create" element={<NewsCreate />} />
             <Route path="news/edit/:id" element={<NewsEdit />} />
             <Route path="news/categories" element={<NewsCategoryManager />} />
+            <Route path="inventory" element={<InventoryManager />} />
           </Route>
         </Route>
       </Routes>
